@@ -1,0 +1,28 @@
+# Android/IntelliJ
+/.gradle
+/local.properties
+/.idea
+*.iml
+
+# Build files
+**/build/
+*/build/
+
+# Gradle wrapper
+/gradle/
+/gradle-wrapper.jar
+
+# Keystore
+*.jks
+*.keystore
+
+# Android Studio system files
+/.idea/workspace.xml
+/.idea/tasks.xml
+
+# Log
+*.log
+
+# Generated files
+captures/
+.externalNativeBuild/

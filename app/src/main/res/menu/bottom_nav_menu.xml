@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/radarFragment2" android:icon="@drawable/ic_tab_radar" android:title="레이더" />
+    <item android:id="@+id/matchingFragment2" android:icon="@drawable/ic_tab_matching" android:title="매칭" />
+    <item android:id="@+id/chatListFragment2" android:icon="@drawable/ic_tab_chat" android:title="채팅" />
+    <item android:id="@+id/myFragment" android:icon="@drawable/ic_tab_my" android:title="MY" />
+</menu>
