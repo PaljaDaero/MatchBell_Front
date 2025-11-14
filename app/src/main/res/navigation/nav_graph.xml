@@ -3,26 +3,43 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/radarFragment2">
+    app:startDestination="@id/splashFragment">
 
     <fragment
-        android:id="@+id/chatListFragment2"
+        android:id="@+id/chatListFragment"
         android:name="com.example.matchbell.feature.ChatListFragment"
         android:label="fragment_chat_list"
         tools:layout="@layout/fragment_chat_list" />
     <fragment
-        android:id="@+id/matchingFragment2"
+        android:id="@+id/matchingFragment"
         android:name="com.example.matchbell.feature.MatchingFragment"
         android:label="fragment_matching"
         tools:layout="@layout/fragment_matching" />
     <fragment
-        android:id="@+id/myFragment2"
+        android:id="@+id/myFragment"
         android:name="com.example.matchbell.feature.MyFragment"
         android:label="fragment_my"
         tools:layout="@layout/fragment_my" />
     <fragment
-        android:id="@+id/radarFragment2"
+        android:id="@+id/radarFragment"
         android:name="com.example.matchbell.feature.RadarFragment"
         android:label="fragment_radar"
         tools:layout="@layout/fragment_radar" />
+
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.matchbell.feature.auth.LoginFragment"
+        android:label="LoginFragment"
+        tools:layout="@layout/fragment_login" />
+
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.example.matchbell.feature.auth.SplashFragment"
+        android:label="SplashFragment"
+        tools:layout="@layout/fragment_splash" />
+
+    <action
+        android:id="@+id/action_splashFragment_to_loginFragment"
+        app:destination="@id/loginFragment" />
 </navigation>

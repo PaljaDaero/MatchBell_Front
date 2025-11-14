@@ -6,6 +6,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
+import android.view.View
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -23,5 +24,17 @@ class MainActivity : AppCompatActivity() {
 
         // 3. 둘을 연결! (이제 탭을 누르면 화면이 바뀝니다)
         bottomNavView.setupWithNavController(navController)
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                // 스플래시와 로그인 화면일 때 탭 바 숨김
+                R.id.splashFragment, R.id.loginFragment -> {
+                    bottomNavView.visibility = View.GONE
+                }
+                else -> {
+                    // 나머지 탭 화면 (레이더, 매칭 등)에서는 보임
+                    bottomNavView.visibility = View.VISIBLE
+                }
+            }
+        }
     }
 }
