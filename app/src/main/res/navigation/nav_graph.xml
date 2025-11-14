@@ -5,6 +5,7 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/splashFragment">
 
+    <!-- 메인 탭 Fragment들 -->
     <fragment
         android:id="@+id/chatListFragment"
         android:name="com.example.matchbell.feature.ChatListFragment"
@@ -27,6 +28,13 @@
         tools:layout="@layout/fragment_radar" />
 
 
+    <!-- 인증/회원가입 흐름 Fragment들 -->
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.example.matchbell.feature.auth.SplashFragment"
+        android:label="SplashFragment"
+        tools:layout="@layout/fragment_splash" />
+
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.example.matchbell.feature.auth.LoginFragment"
@@ -38,16 +46,25 @@
     </fragment>
 
     <fragment
-        android:id="@+id/splashFragment"
-        android:name="com.example.matchbell.feature.auth.SplashFragment"
-        android:label="SplashFragment"
-        tools:layout="@layout/fragment_splash" />
+        android:id="@+id/signupTermsFragment"
+        android:name="com.example.matchbell.feature.auth.SignupTermsFragment"
+        android:label="SignupTermsFragment"
+        tools:layout="@layout/fragment_signup_terms"> <!-- 💡 레이아웃 파일 연결 추가 -->
+        <action
+            android:id="@+id/action_signupTermsFragment_to_signupInfoFragment"
+            app:destination="@id/signupInfoFragment" />
+    </fragment>
 
+    <fragment
+        android:id="@+id/signupInfoFragment"
+        android:name="com.example.matchbell.feature.auth.SignupInfoFragment"
+        android:label="SignupInfoFragment"
+        tools:layout="@layout/fragment_register_info" />
+
+
+    <!-- Splash에서 Login으로 가는 전역 액션 -->
     <action
         android:id="@+id/action_splashFragment_to_loginFragment"
         app:destination="@id/loginFragment" />
-    <fragment
-        android:id="@+id/signupTermsFragment"
-        android:name="com.example.matchbell.feature.auth.SignupTermsFragment"
-        android:label="SignupTermsFragment" />
+
 </navigation>

@@ -56,6 +56,11 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
 
+    // Fragment KTX (by viewModels 사용을 위해)
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
+// 최신 버전 확인 필요
+// Core KTX (doAfterTextChanged 사용을 위해)
+    implementation("androidx.core:core-ktx:1.12.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

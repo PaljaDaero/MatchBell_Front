@@ -32,10 +32,9 @@ class SignupTermsFragment : Fragment(R.layout.fragment_signup_terms) {
         // '확인' 버튼 클릭 시
         btnNext.setOnClickListener {
             if (cbService.isChecked && cbPrivacy.isChecked) {
-                // 필수 약관 동의 시 다음 화면(정보 입력)으로 이동
-                // TODO: nav_graph에 연결 후 주석 해제
-                // findNavController().navigate(R.id.action_signupTerms_to_signupInfo)
-                Toast.makeText(context, "약관 동의 완료! 다음 단계로", Toast.LENGTH_SHORT).show()
+                // [수정됨] 다음 화면(SignupInfoFragment)으로 이동!
+                // (nav_graph에서 화살표를 그어야 이 ID가 생깁니다!)
+                findNavController().navigate(R.id.action_signupTermsFragment_to_signupInfoFragment)
             } else {
                 Toast.makeText(context, "필수 약관에 동의해주세요.", Toast.LENGTH_SHORT).show()
             }
