@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
 
+    //회원가입 2에 쓸 라이브러리
     // Fragment KTX (by viewModels 사용을 위해)
     implementation("androidx.fragment:fragment-ktx:1.6.2")
 // 최신 버전 확인 필요
