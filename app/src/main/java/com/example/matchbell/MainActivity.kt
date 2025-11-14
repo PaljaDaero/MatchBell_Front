@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 // 스플래시와 로그인 화면일 때 탭 바 숨김
-                R.id.splashFragment, R.id.loginFragment -> {
+                R.id.splashFragment, R.id.loginFragment, R.id.signupTermsFragment -> {
                     bottomNavView.visibility = View.GONE
                 }
                 else -> {

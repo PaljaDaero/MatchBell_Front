@@ -31,7 +31,11 @@
         android:id="@+id/loginFragment"
         android:name="com.example.matchbell.feature.auth.LoginFragment"
         android:label="LoginFragment"
-        tools:layout="@layout/fragment_login" />
+        tools:layout="@layout/fragment_login" >
+        <action
+            android:id="@+id/action_loginFragment_to_signupTermsFragment"
+            app:destination="@id/signupTermsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/splashFragment"
@@ -42,4 +46,8 @@
     <action
         android:id="@+id/action_splashFragment_to_loginFragment"
         app:destination="@id/loginFragment" />
+    <fragment
+        android:id="@+id/signupTermsFragment"
+        android:name="com.example.matchbell.feature.auth.SignupTermsFragment"
+        android:label="SignupTermsFragment" />
 </navigation>
