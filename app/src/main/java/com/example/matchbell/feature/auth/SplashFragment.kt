@@ -1,31 +1,33 @@
-package com.example.matchbell.feature.auth // 님의 정확한 패키지 경로
+package com.example.matchbell.feature.auth
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.example.matchbell.R // 님의 R 파일 경로
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.example.matchbell.R // ✅ R 클래스를 import 해야 합니다.
 
-@AndroidEntryPoint
-class SplashFragment : Fragment(R.layout.fragment_splash) {
+class SplashFragment : Fragment() {
 
-    // 💡 이 부분에 onViewCreated 함수를 통째로 추가하세요.
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // 이 프래그먼트의 레이아웃을 설정합니다.
+        return inflater.inflate(R.layout.fragment_splash, container, false)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Coroutine(비서)에게 2초 대기 후 이동하라는 작업을 지시
-        viewLifecycleOwner.lifecycleScope.launch {
-            delay(2000) // 2초 (2000ms) 대기
-
-            // 2. Navigation을 사용해 다음 화면(로그인)으로 이동
-            if (isAdded) {
-                // R.id.action_splashFragment_to_loginFragment는 nav_graph.xml에 추가한 이동 경로 ID입니다.
-                findNavController().navigate(R.id.action_splashFragment_to_loginFragment)
-            }
-        }
+        // ✅ 2초 후에 로그인 화면으로 이동하는 로직 추가
+        Handler(Looper.getMainLooper()).postDelayed({
+            // NavController를 사용하여 화면을 전환합니다.
+            // nav_graph.xml에 정의된 전역 action의 ID를 사용합니다.
+            findNavController().navigate(R.id.action_splashFragment_to_loginFragment)
+        }, 2000) // 2000 milliseconds = 2초
     }
 }

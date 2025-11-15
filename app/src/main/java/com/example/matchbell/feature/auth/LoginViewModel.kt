@@ -25,13 +25,13 @@ class LoginViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
-    fun onLoginButtonClicked(email: String, pw: String) {
+    fun onLoginButtonClicked(id: String, pw: String) {
         viewModelScope.launch {
             // 로딩 시작!
             _isLoading.value = true
 
             try {
-                val request = LoginRequest(email, pw)
+                val request = LoginRequest(id, pw)
                 val response = authApi.login(request)
 
                 if (response.isSuccessful) {

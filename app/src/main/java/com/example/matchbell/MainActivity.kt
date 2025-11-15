@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
                 else -> {
                     // 나머지 탭 화면 (레이더, 매칭 등)에서는 보임
                     bottomNavView.visibility = View.VISIBLE
-                }
+                } // ✅ when 구문의 닫는 중괄호를 여기에 추가했습니다.
             }
         }
     }
