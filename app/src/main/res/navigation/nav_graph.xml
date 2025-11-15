@@ -49,7 +49,7 @@
         android:id="@+id/signupTermsFragment"
         android:name="com.example.matchbell.feature.auth.SignupTermsFragment"
         android:label="SignupTermsFragment"
-        tools:layout="@layout/fragment_signup_terms"> <!-- 💡 레이아웃 파일 연결 추가 -->
+        tools:layout="@layout/fragment_signup_terms">
         <action
             android:id="@+id/action_signupTermsFragment_to_signupInfoFragment"
             app:destination="@id/signupInfoFragment" />
@@ -59,12 +59,21 @@
         android:id="@+id/signupInfoFragment"
         android:name="com.example.matchbell.feature.auth.SignupInfoFragment"
         android:label="SignupInfoFragment"
-        tools:layout="@layout/fragment_register_info" />
+        tools:layout="@layout/fragment_register_info" >
+        <action
+            android:id="@+id/action_signupInfoFragment_to_profileSetupFragment2"
+            app:destination="@id/profileSetupFragment" />
+    </fragment>
 
 
     <!-- Splash에서 Login으로 가는 전역 액션 -->
     <action
         android:id="@+id/action_splashFragment_to_loginFragment"
         app:destination="@id/loginFragment" />
+    <fragment
+        android:id="@+id/profileSetupFragment"
+        android:name="com.example.matchbell.feature.auth.ProfileSetupFragment"
+        android:label="fragment_profile_setup"
+        tools:layout="@layout/fragment_profile_setup" />
 
 </navigation>
