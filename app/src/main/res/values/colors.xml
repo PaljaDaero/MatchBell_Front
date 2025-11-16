@@ -3,4 +3,6 @@
     <color name="app_main_pink">#FF69B4</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
+    <color name="app_background_pink">#FFF9FA</color>
+    <color name="button_light_pink">#F3A6B5</color>
 </resources>
