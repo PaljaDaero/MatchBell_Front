@@ -16,14 +16,17 @@
         android:name="com.example.matchbell.feature.MatchingFragment"
         android:label="fragment_matching"
         tools:layout="@layout/fragment_matching" />
+
     <fragment
         android:id="@+id/myFragment"
-        android:name="com.example.matchbell.feature.MyFragment"
+        android:name="com.example.matchbell.MyFragment"
         android:label="fragment_my"
-        tools:layout="@layout/fragment_my" />
+        tools:layout="@layout/fragment_my" >
+    </fragment>
+
     <fragment
         android:id="@+id/radarFragment"
-        android:name="com.example.matchbell.feature.RadarFragment"
+        android:name="com.example.matchbell.RadarFragment"
         android:label="fragment_radar"
         tools:layout="@layout/fragment_radar" />
 
@@ -75,5 +78,4 @@
         android:name="com.example.matchbell.feature.auth.ProfileSetupFragment"
         android:label="fragment_profile_setup"
         tools:layout="@layout/fragment_profile_setup" />
-
 </navigation>
