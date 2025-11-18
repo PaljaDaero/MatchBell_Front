@@ -30,6 +30,11 @@ android {
             )
         }
     }
+
+    buildFeatures {
+        viewBinding = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -52,15 +57,10 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging.interceptor)
 
-    // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
 
-    //회원가입 2에 쓸 라이브러리
-    // Fragment KTX (by viewModels 사용을 위해)
     implementation("androidx.fragment:fragment-ktx:1.6.2")
-// 최신 버전 확인 필요
-// Core KTX (doAfterTextChanged 사용을 위해)
     implementation("androidx.core:core-ktx:1.12.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

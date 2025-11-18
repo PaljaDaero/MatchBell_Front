@@ -32,7 +32,7 @@
         app:layout_constraintTop_toBottomOf="@+id/iv_login_logo" />
 
     <EditText
-        android:id="@+id/et_email"
+        android:id="@+id/et_id"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
@@ -52,9 +52,9 @@
         android:hint="비밀번호"
         android:inputType="textPassword"
         android:minHeight="48dp"
-        app:layout_constraintEnd_toEndOf="@+id/et_email"
-        app:layout_constraintStart_toStartOf="@+id/et_email"
-        app:layout_constraintTop_toBottomOf="@+id/et_email" />
+        app:layout_constraintEnd_toEndOf="@+id/et_id"
+        app:layout_constraintStart_toStartOf="@+id/et_id"
+        app:layout_constraintTop_toBottomOf="@+id/et_id" />
 
     <Button
         android:id="@+id/btn_login"

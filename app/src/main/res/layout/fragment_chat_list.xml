@@ -1,14 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".feature.ChatListFragment">
+    android:background="#FFF0F5">
 
-    <!-- TODO: Update blank fragment layout -->
+    <ImageView
+        android:id="@+id/message_bar"
+        android:layout_width="375dp"
+        android:layout_height="76dp"
+        app:srcCompat="@drawable/bg_message_bar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:id="@+id/tv_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="궁합레이더에서 운명의 상대를 찾아보세요"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintHorizontal_chainStyle="packed"
 
-</FrameLayout>
+        app:layout_constraintStart_toStartOf="@id/message_bar"
+        app:layout_constraintEnd_toStartOf="@+id/iv_bell"
+        app:layout_constraintTop_toTopOf="@id/message_bar"
+        app:layout_constraintBottom_toBottomOf="@id/message_bar" />
+
+    <ImageView
+        android:id="@+id/iv_bell"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_bell"
+        android:layout_marginEnd="32dp"
+
+        app:layout_constraintEnd_toEndOf="@id/message_bar"
+        app:layout_constraintTop_toTopOf="@id/message_bar"
+        app:layout_constraintBottom_toBottomOf="@id/message_bar"
+        app:layout_constraintStart_toEndOf="@id/tv_message" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
