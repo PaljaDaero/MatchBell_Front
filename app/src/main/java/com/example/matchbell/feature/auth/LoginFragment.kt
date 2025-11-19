@@ -32,6 +32,12 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         val loginButton = view.findViewById<Button>(R.id.btn_login)
         val loadingBar = view.findViewById<ProgressBar>(R.id.progress_bar)
         val signupText = view.findViewById<TextView>(R.id.tv_signup) // 회원가입 글씨 가져오기
+        val findPwText = view.findViewById<TextView>(R.id.tv_find_pw)
+
+        findPwText.setOnClickListener {
+            // 1단계에서 지도에 그린 화살표를 타고 이동!
+            findNavController().navigate(R.id.action_loginFragment_to_findPasswordFragment)
+        }
 
         // 1. 로그인 버튼 클릭
         loginButton.setOnClickListener {

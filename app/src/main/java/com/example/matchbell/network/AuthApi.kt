@@ -25,4 +25,8 @@ interface AuthApi {
     // [추가] 3. 이메일 인증번호 확인 API
     @POST("/auth/email/verify")
     suspend fun verifyEmail(@Body request: EmailVerifyRequest): Response<Unit>
+
+    @POST("/auth/password/verify")
+    suspend fun verifyPasswordCode(@Body request: EmailVerifyRequest): Response<Unit>
+
 }

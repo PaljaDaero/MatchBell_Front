@@ -43,6 +43,9 @@
         <action
             android:id="@+id/action_loginFragment_to_signupTermsFragment"
             app:destination="@id/signupTermsFragment" />
+        <action
+            android:id="@+id/action_loginFragment_to_findPasswordFragment"
+            app:destination="@id/findPasswordFragment" />
     </fragment>
 
     <fragment
@@ -75,5 +78,10 @@
         android:name="com.example.matchbell.feature.auth.ProfileSetupFragment"
         android:label="fragment_profile_setup"
         tools:layout="@layout/fragment_profile_setup" />
+    <fragment
+        android:id="@+id/findPasswordFragment"
+        android:name="com.example.matchbell.feature.auth.FindPasswordFragment"
+        android:label="fragment_find_password"
+        tools:layout="@layout/fragment_find_password" />
 
 </navigation>
