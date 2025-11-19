@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/app_background_pink"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="설정"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:gravity="center"
+        android:layout_marginTop="40dp"
+        android:layout_marginBottom="32dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_rounded_card"
+        android:padding="20dp"
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="계정"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@android:color/black"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/btn_profile_edit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="프로필 수정"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:paddingVertical="12dp"
+            android:drawableEnd="@drawable/ic_arrow_right"
+            android:drawablePadding="8dp"
+            android:background="?attr/selectableItemBackground"/>
+
+        <TextView
+            android:id="@+id/btn_pw_change"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="비밀번호 변경"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:paddingVertical="12dp"
+            android:drawableEnd="@drawable/ic_arrow_right"
+            android:drawablePadding="8dp"
+            android:background="?attr/selectableItemBackground"/>
+
+        <TextView
+            android:id="@+id/btn_notification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="푸시 알림 설정"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:paddingVertical="12dp"
+            android:drawableEnd="@drawable/ic_arrow_right"
+            android:drawablePadding="8dp"
+            android:background="?attr/selectableItemBackground"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_rounded_card"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="고객 지원"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@android:color/black"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/btn_version"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="버전 정보"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:paddingVertical="12dp"
+            android:drawableEnd="@drawable/ic_arrow_right"
+            android:drawablePadding="8dp"
+            android:background="?attr/selectableItemBackground"/>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:id="@+id/btn_logout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="로그아웃"
+        android:textColor="#888888"
+        android:textSize="14sp"
+        android:layout_marginBottom="12dp"/>
+
+    <TextView
+        android:id="@+id/btn_withdraw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="계정탈퇴"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#FF0000"/>
+
+</LinearLayout>
