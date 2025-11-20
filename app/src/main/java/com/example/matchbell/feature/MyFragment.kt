@@ -1,60 +1,56 @@
-package com.example.matchbell.feature
+package com.example.matchbell
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.example.matchbell.R
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import com.example.matchbell.databinding.FragmentMyBinding
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [MyFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class MyFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private var _binding: FragmentMyBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_my, container, false)
+        _binding = FragmentMyBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment MyFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            MyFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+//        // 1. 설정 버튼 클릭
+//        binding.ivSettings.setOnClickListener {
+//            // R.id.fragment_my_settings로 이동 (nav_graph.xml에 정의된 ID 사용)
+//            findNavController().navigate(R.id.fragment_my_settings)
+//        }
+//
+//        // 2. 오늘의 운세 버튼 클릭
+//        binding.btnTodayFortune.setOnClickListener {
+//            findNavController().navigate(R.id.fragment_my_today_fortune)
+//        }
+//
+//        // 3. 나만의 궁합 버튼 클릭
+//        binding.btnMyMatching.setOnClickListener {
+//            findNavController().navigate(R.id.fragment_my_matching)
+//        }
+//
+//        // 4. 궁합 랭킹 버튼 클릭
+//        binding.btnMyRanking.setOnClickListener {
+//            findNavController().navigate(R.id.fragment_my_ranking)
+//        }
+
+        // 5. 한줄 소개 텍스트는 서버에서 받아와서 설정 (예시)
+        // binding.tvComment.text = "서버에서 받은 한줄소개"
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

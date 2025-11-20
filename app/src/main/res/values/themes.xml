@@ -1,7 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Base.Theme.MatchBell" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowLightStatusBar"> true </item>
+        <item name="android:statusBarColor"> @android:color/transparent </item>
+        <item name="android:windowDrawsSystemBarBackgrounds"> true </item>
     </style>
 
-    <style name="Theme.MatchBell" parent="Base.Theme.MatchBell" />
+    <style name="Theme.MatchBell" parent="Base.Theme.MatchBell"
+        />
+
+
 </resources>
