@@ -77,5 +77,13 @@
         android:id="@+id/profileSetupFragment"
         android:name="com.example.matchbell.feature.auth.ProfileSetupFragment"
         android:label="fragment_profile_setup"
-        tools:layout="@layout/fragment_profile_setup" />
+        tools:layout="@layout/fragment_profile_setup" >
+        <action
+            android:id="@+id/action_profileSetupFragment_to_permissionFragment"
+            app:destination="@id/permissionFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/permissionFragment"
+        android:name="com.example.matchbell.feature.auth.PermissionFragment"
+        android:label="PermissionFragment" />
 </navigation>

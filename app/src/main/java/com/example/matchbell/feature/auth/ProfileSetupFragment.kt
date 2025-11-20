@@ -112,8 +112,8 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
             // 위 검사를 모두 통과해야만 여기가 실행됨
             Toast.makeText(context, "프로필 설정 완료! 환영합니다 ($nickname)님", Toast.LENGTH_SHORT).show()
 
-            // 다음 화면으로 이동
-            // findNavController().navigate(...)
+            // 아래 코드를 주석 해제하고 사용하세요! (ID가 맞는지 확인 필요)
+            findNavController().navigate(R.id.action_profileSetupFragment_to_permissionFragment)
         }
     }
 }
