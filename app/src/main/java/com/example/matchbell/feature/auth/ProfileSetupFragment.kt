@@ -1,5 +1,6 @@
 package com.example.matchbell.feature.auth
 
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.net.Uri
 import android.os.Bundle
@@ -21,15 +22,9 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
 
     private lateinit var profileImageView: ImageView
 
-    // 1. 갤러리에서 사진 가져오기 위한 '런처' 설정
-    // (ActivityResultContracts.GetContent()는 이미지를 가져오는 표준 방식입니다)
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
-            // 사진을 선택했을 경우, 이미지뷰에 바로 보여줌
             profileImageView.setImageURI(uri)
-
-            // 주의: 실제 앱에서는 여기서 선택된 uri를 파일로 변환해 서버로 전송해야 합니다.
-            // 지금은 화면에 보여주는 것까지만 구현됨.
         } else {
             Toast.makeText(context, "사진 선택이 취소되었습니다.", Toast.LENGTH_SHORT).show()
         }
@@ -39,66 +34,86 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
         super.onViewCreated(view, savedInstanceState)
 
         // 뷰 찾아오기
-        profileImageView = view.findViewById(R.id.iv_profile_image) // 멤버 변수에 할당
+        profileImageView = view.findViewById(R.id.iv_profile_image)
         val nicknameInput = view.findViewById<EditText>(R.id.et_nickname)
-        val birthDateTextView = view.findViewById<TextView>(R.id.tv_birth_value) // 생년월일 텍스트뷰
+        val bioInput = view.findViewById<EditText>(R.id.et_bio)
+        val birthDateTextView = view.findViewById<TextView>(R.id.tv_birth_value)
+        val regionTextView = view.findViewById<TextView>(R.id.tv_region_value)
+        val jobInput = view.findViewById<EditText>(R.id.et_job)
         val btnFinish = view.findViewById<Button>(R.id.btn_finish_signup)
 
-        // -------------------------------------------------------
-        // 기능 1: 프로필 사진 클릭 시 갤러리 열기
-        // -------------------------------------------------------
+        // 1. 프로필 사진
         profileImageView.setOnClickListener {
-            // "image/*"는 모든 이미지 파일을 보여달라는 뜻입니다.
             pickImageLauncher.launch("image/*")
         }
 
-        // -------------------------------------------------------
-        // 기능 2: 생년월일 클릭 시 달력(DatePicker) 띄우기
-        // -------------------------------------------------------
+        // 2. 생년월일
         birthDateTextView.setOnClickListener {
-            // 현재 날짜를 기준으로 달력을 엽니다.
             val calendar = Calendar.getInstance()
             val year = calendar.get(Calendar.YEAR)
             val month = calendar.get(Calendar.MONTH)
             val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-            // DatePickerDialog 생성
             val datePickerDialog = DatePickerDialog(
                 requireContext(),
                 { _, selectedYear, selectedMonth, selectedDay ->
-                    // 날짜 선택 후 '확인' 눌렀을 때 실행되는 코드
-                    // selectedMonth는 0부터 시작하므로 +1 해줘야 함
                     val formattedDate = "${selectedYear}년 ${selectedMonth + 1}월 ${selectedDay}일"
                     birthDateTextView.text = formattedDate
                 },
                 year, month, day
             )
-
-            // 달력 표시
             datePickerDialog.show()
         }
 
-        // -------------------------------------------------------
-        // 완료 버튼 로직
-        // -------------------------------------------------------
-        btnFinish.setOnClickListener {
-            val nickname = nicknameInput.text.toString().trim()
+        // 3. 지역 선택
+        regionTextView.setOnClickListener {
+            val regions = arrayOf(
+                "서울특별시", "경기도", "인천광역시", "강원도", "충청북도", "충청남도",
+                "대전광역시", "경상북도", "경상남도", "대구광역시", "울산광역시", "부산광역시",
+                "전라북도", "전라남도", "광주광역시", "제주특별자치도"
+            )
 
+            AlertDialog.Builder(requireContext())
+                .setTitle("지역을 선택해주세요")
+                .setItems(regions) { _, which ->
+                    regionTextView.text = regions[which]
+                }
+                .show()
+        }
+
+        // 4. 확인 버튼 (유효성 검사 추가됨!)
+        btnFinish.setOnClickListener {
+            // 입력된 내용 가져오기 (.trim()은 앞뒤 공백 제거)
+            val nickname = nicknameInput.text.toString().trim()
+            val bio = bioInput.text.toString().trim()
+            val job = jobInput.text.toString().trim()
+
+            // [검사 1] 닉네임 입력 확인
             if (nickname.isEmpty()) {
                 Toast.makeText(context, "닉네임을 입력해주세요.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (nickname.length > 10) {
-                Toast.makeText(context, "닉네임은 10자 이하로 입력해주세요.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+                nicknameInput.requestFocus() // 커서를 닉네임 칸으로 이동
+                return@setOnClickListener // 여기서 함수 종료 (밑으로 안내려감)
             }
 
-            // TODO: 서버 전송 로직 (ViewModel 연동 필요)
+            // [검사 2] 자기소개 입력 확인
+            if (bio.isEmpty()) {
+                Toast.makeText(context, "자기소개를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                bioInput.requestFocus()
+                return@setOnClickListener
+            }
 
-            Toast.makeText(context, "회원가입 완료! 권한 설정으로 이동", Toast.LENGTH_SHORT).show()
+            // [검사 3] 직업 입력 확인 (필요 없으면 이 부분 지워도 됨)
+            if (job.isEmpty()) {
+                Toast.makeText(context, "직업을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                jobInput.requestFocus()
+                return@setOnClickListener
+            }
 
-            // 다음 화면으로 이동 (네비게이션 그래프 ID 확인 필요)
-            // findNavController().navigate(R.id.action_profileSetupFragment_to_permissionFragment)
+            // 위 검사를 모두 통과해야만 여기가 실행됨
+            Toast.makeText(context, "프로필 설정 완료! 환영합니다 ($nickname)님", Toast.LENGTH_SHORT).show()
+
+            // 다음 화면으로 이동
+            // findNavController().navigate(...)
         }
     }
 }
