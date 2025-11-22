@@ -41,6 +41,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             val id = idInput.text.toString().trim() // [보안] 공백 제거
             val pw = passwordInput.text.toString().trim()
 
+
             // ⬇️⬇️⬇️ [DELETE START] 백엔드 연동 시 삭제 (관리자 테스트 모드) ⬇️⬇️⬇️
             // [테스트용] 관리자 계정 (백엔드 연결 시 삭제 요망)
             if (id == "admin" && pw == "admin") {
@@ -85,6 +86,8 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             if (MockServer.checkLogin(id, pw)) {
                 Toast.makeText(context, "로그인 성공! (임시 계정)", Toast.LENGTH_SHORT).show()
 
+                // [임시] 가짜 토큰 저장 (나중에 삭제됨)
+                TokenManager.saveTokens(requireContext(), "fake_access_token_12345")
                 // 키보드 내리기 등의 처리를 위해 focus 제거 (선택 사항)
                 idInput.clearFocus()
                 passwordInput.clearFocus()
@@ -119,6 +122,9 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                 when {
                     event == "SUCCESS" -> {
                         Toast.makeText(context, "로그인 성공!", Toast.LENGTH_SHORT).show()
+                        // ⬇️⬇️⬇️ [MODIFY] 나중에 여기에 '진짜 토큰' 저장 코드를 추가해야 함 ⬇️⬇️⬇️
+                        // 예: TokenManager.saveTokens(requireContext(), event.realToken)
+                        // 아마 주석 지우면 realToken에 오류뜰텐데, 이건 벡엔드에서 백엔드에서 받아온 진짜 토큰 변수 이름받아오면 고치면됨.현재event에는 realToken이라는게 없어서 빨간 줄이 뜹니다.
                         findNavController().navigate(R.id.radarFragment)
                     }
                     else -> {
