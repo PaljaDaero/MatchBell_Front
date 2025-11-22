@@ -19,21 +19,19 @@ class PermissionFragment : Fragment(R.layout.fragment_permission) {
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        // 권한 허용 여부와 상관없이 일단 다음 화면(메인)으로 넘어가게 처리하거나,
-        // 필수로 받아야 한다면 거절 시 토스트를 띄울 수도 있습니다.
-
         val gpsGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val notiGranted = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
 
-        if (gpsGranted && notiGranted) {
-            Toast.makeText(context, "모든 권한이 허용되었습니다!", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(context, "일부 권한이 거부되었습니다. 설정에서 변경 가능합니다.", Toast.LENGTH_LONG).show()
+        if (gpsGranted) {
+            Toast.makeText(context, "권한 설정 완료! 다시 로그인해주세요.", Toast.LENGTH_LONG).show()
         }
 
-        // 권한 설정이 끝나면 진짜 앱 메인 화면으로 이동!
-        // (메인 화면으로 가는 액션 ID를 적어야 합니다. 일단 임시로 적어둡니다.)
-        // findNavController().navigate(R.id.action_permissionFragment_to_homeFragment)
+        // ⭐⭐⭐ [핵심] 로그인 화면으로 이동하기 ⭐⭐⭐
+        // nav_graph.xml에서 permissionFragment -> loginFragment 화살표를 만들어야 합니다!
+        // ID가 action_permissionFragment_to_loginFragment 라고 가정합니다.
+        findNavController().navigate(R.id.action_permissionFragment_to_loginFragment)
+
+        // (만약 화살표 만들기 귀찮으면, 아래 코드로 백스택을 다 지우고 처음으로 갈 수도 있습니다)
+        // findNavController().popBackStack(R.id.loginFragment, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

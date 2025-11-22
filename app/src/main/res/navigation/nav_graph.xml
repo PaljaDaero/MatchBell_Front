@@ -85,5 +85,9 @@
     <fragment
         android:id="@+id/permissionFragment"
         android:name="com.example.matchbell.feature.auth.PermissionFragment"
-        android:label="PermissionFragment" />
+        android:label="PermissionFragment" >
+        <action
+            android:id="@+id/action_permissionFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+    </fragment>
 </navigation>

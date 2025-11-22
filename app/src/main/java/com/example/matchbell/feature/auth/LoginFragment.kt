@@ -56,6 +56,18 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                 Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+            // ⭐⭐⭐ [추가된 부분] 가짜 서버(MockServer) 먼저 확인하기 ⭐⭐⭐
+            // 방금 회원가입한 정보를 여기서 가로채서 로그인 성공시켜줍니다.
+            if (MockServer.checkLogin(id, pw)) {
+                Toast.makeText(context, "로그인 성공! (임시 계정)", Toast.LENGTH_SHORT).show()
+
+                // 메인 화면으로 이동
+                // (만약 앱이 죽으면 R.id.radarFragment 대신 R.id.action_loginFragment_to_radarFragment 로 바꿔보세요)
+                findNavController().navigate(R.id.radarFragment)
+
+                return@setOnClickListener // 성공했으니 밑에 있는 서버 요청 코드는 실행 안 함
+            }
+            // ⭐⭐⭐ [추가 끝] ⭐⭐⭐
 
             viewModel.onLoginButtonClicked(id, pw)
         }
