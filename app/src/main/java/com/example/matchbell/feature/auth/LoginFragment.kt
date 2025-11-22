@@ -1,12 +1,11 @@
 package com.example.matchbell.feature.auth
 
 import android.os.Bundle
-import android.util.Patterns
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
-import android.widget.TextView // TextView 추가
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -31,53 +30,81 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         val loadingBar = view.findViewById<ProgressBar>(R.id.progress_bar)
         val signupText = view.findViewById<TextView>(R.id.tv_signup)
 
+        // [보안] 현재 화면 캡처/녹화 방지 켜기
+        requireActivity().window.setFlags(
+            android.view.WindowManager.LayoutParams.FLAG_SECURE,
+            android.view.WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         // 1. 로그인 버튼 클릭
         loginButton.setOnClickListener {
-            val id = idInput.text.toString().trim()
+            val id = idInput.text.toString().trim() // [보안] 공백 제거
             val pw = passwordInput.text.toString().trim()
 
-            if (id == "admin" && pw == "admin") { // 백엔드 구축 완료 시 제거할 부분
+            // ⬇️⬇️⬇️ [DELETE START] 백엔드 연동 시 삭제 (관리자 테스트 모드) ⬇️⬇️⬇️
+            // [테스트용] 관리자 계정 (백엔드 연결 시 삭제 요망)
+            if (id == "admin" && pw == "admin") {
                 Toast.makeText(context, "관리자 모드 (테스트)", Toast.LENGTH_SHORT).show()
                 findNavController().navigate(R.id.radarFragment)
                 return@setOnClickListener
+                // ⬆️⬆️⬆️ [DELETE END] 여기까지 삭제 ⬆️⬆️⬆️
             }
+
+            // --- [보안 수정 시작] 로그인 시에도 형식을 체크하여 불필요한 요청 방지 ---
 
             if (id.isEmpty()) {
                 Toast.makeText(context, "아이디를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                idInput.requestFocus()
                 return@setOnClickListener
             }
 
+            // 아이디 형식 검사 (회원가입 조건과 일치시킴)
             if (!isValidUsername(id)) {
-                Toast.makeText(context, "올바른 아이디 형식이 아닙니다. (6~20자의 영문, 숫자)", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "아이디 형식이 올바르지 않습니다.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             if (pw.isEmpty()) {
                 Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                passwordInput.requestFocus()
                 return@setOnClickListener
             }
-            // ⭐⭐⭐ [추가된 부분] 가짜 서버(MockServer) 먼저 확인하기 ⭐⭐⭐
-            // 방금 회원가입한 정보를 여기서 가로채서 로그인 성공시켜줍니다.
+
+            // [추가됨] 비밀번호 형식 검사 (회원가입 조건과 일치시킴)
+            // 보안상 로그인 때는 "형식이 틀렸다"고 너무 친절하게 알려주지 않는 경우도 있지만,
+            // UX를 위해 사용자가 실수한 것을 바로 알 수 있게 추가했습니다.
+            if (!isValidPassword(pw)) {
+                Toast.makeText(context, "비밀번호 형식이 올바르지 않습니다. (영문+숫자+특수문자)", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            // --- [보안 수정 끝] ---
+
+
+            // ⬇️⬇️⬇️ [DELETE START] 백엔드 연동 시 삭제 (가짜 서버 확인 로직) ⬇️⬇️⬇️
+            // ⭐⭐⭐ 가짜 서버(MockServer) 먼저 확인하기 ⭐⭐⭐
             if (MockServer.checkLogin(id, pw)) {
                 Toast.makeText(context, "로그인 성공! (임시 계정)", Toast.LENGTH_SHORT).show()
 
-                // 메인 화면으로 이동
-                // (만약 앱이 죽으면 R.id.radarFragment 대신 R.id.action_loginFragment_to_radarFragment 로 바꿔보세요)
+                // 키보드 내리기 등의 처리를 위해 focus 제거 (선택 사항)
+                idInput.clearFocus()
+                passwordInput.clearFocus()
+
                 findNavController().navigate(R.id.radarFragment)
-
-                return@setOnClickListener // 성공했으니 밑에 있는 서버 요청 코드는 실행 안 함
+                return@setOnClickListener
             }
-            // ⭐⭐⭐ [추가 끝] ⭐⭐⭐
+// ⭐⭐⭐ [추가 끝] ⭐⭐⭐
+            // ⬆️⬆️⬆️ [DELETE END] 여기까지 삭제 ⬆️⬆️⬆️
 
+            // 실제 서버 요청
             viewModel.onLoginButtonClicked(id, pw)
         }
 
-        // 2. 회원가입 텍스트 클릭 (기존 로직 유지)
+        // 2. 회원가입 텍스트 클릭
         signupText.setOnClickListener {
             findNavController().navigate(R.id.action_loginFragment_to_signupTermsFragment)
         }
 
-        // 3. 로딩 상태 관찰 (기존 로직 유지)
+        // 3. 로딩 상태 관찰
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.isLoading.collect { isLoading ->
                 loadingBar.isVisible = isLoading
@@ -86,7 +113,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             }
         }
 
-        // 4. 로그인 결과 관찰 (기존 로직 유지)
+        // 4. 로그인 결과 관찰
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.loginEvent.collect { event ->
                 when {
@@ -101,9 +128,24 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             }
         }
     }
+    // [중요] 화면을 벗어날 때는 캡처 방지를 풀어줘야 다른 화면(메인)에서 캡처가 됩니다.
+    override fun onDestroyView() {
+        super.onDestroyView()
+        requireActivity().window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+    }
+
+    // [보안] 아이디 검증 함수 (SignupInfoFragment와 동일)
     private fun isValidUsername(username: String): Boolean {
-        // [a-zA-Z0-9]{6,20} : 영문 대소문자, 숫자만 허용하며, 6자에서 20자 사이
-        if (username == "admin") return true; // 백엔드 구축 완료 시 제거할 부분ㅁ
-        return username.matches("^[a-zA-Z0-9]{6,20}$".toRegex())
+        if (username == "admin") return true // 백엔드 구축 완료 시 제거할 부분ㅁ
+        val regex = "^[a-zA-Z0-9]{6,20}$"
+        return username.matches(regex.toRegex())
+    }
+
+    // [보안] 비밀번호 검증 함수 추가 (SignupInfoFragment와 동일)
+    private fun isValidPassword(password: String): Boolean {
+        if (password == "admin") return true // 백엔드 구축 완료 시 제거할 부분ㅁ
+        // 영문, 숫자, 특수문자 포함 8~20자
+        val regex = "^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
+        return password.matches(regex.toRegex())
     }
 }

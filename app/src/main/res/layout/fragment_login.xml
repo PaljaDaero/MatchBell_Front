@@ -52,6 +52,8 @@
         android:hint="비밀번호"
         android:inputType="textPassword"
         android:minHeight="48dp"
+        android:importantForAutofill="no"
+        android:privateImeOptions="defaultInputmode=english;noLearning=true"
         app:layout_constraintEnd_toEndOf="@+id/et_id"
         app:layout_constraintStart_toStartOf="@+id/et_id"
         app:layout_constraintTop_toBottomOf="@+id/et_id" />

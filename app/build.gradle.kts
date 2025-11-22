@@ -23,7 +23,13 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = false //개발 완료시 삭제하기
+            /*
+            // ⬇️⬇️⬇️ 개발 완료시 주석 풀기 ⬇️⬇️⬇️
+            // [보안] 코드를 난독화하여 역공학 방지 (false -> true 로 변경)
+            isMinifyEnabled = true
+            isShrinkResources = true // 안 쓰는 리소스 제거 (앱 용량도 줄어듦)
+            */
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
