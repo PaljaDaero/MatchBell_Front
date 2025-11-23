@@ -13,6 +13,7 @@ import com.example.matchbell.data.model.VerifyResponse
 import retrofit2.Response // 이 부분을 수정하세요
 import retrofit2.http.Body
 import retrofit2.http.POST
+import retrofit2.http.DELETE
 
 interface AuthApi {
     @POST("/auth/login")
@@ -43,4 +44,7 @@ interface AuthApi {
     @POST("auth/password/reset")
     suspend fun resetPassword(@Body body: ResetPasswordRequest): Response<Unit>
 
+    //백엔드가 주소보내주면 수정하면 됨
+    @DELETE("auth/withdraw")
+    suspend fun withdrawAccount(): Response<Unit>
 }

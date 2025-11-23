@@ -19,9 +19,12 @@
 
     <fragment
         android:id="@+id/myFragment"
-        android:name="com.example.matchbell.MyFragment"
+        android:name="com.example.matchbell.feature.my.MyFragment"
         android:label="fragment_my"
         tools:layout="@layout/fragment_my" >
+        <action
+            android:id="@+id/action_myFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
     </fragment>
 
     <fragment
@@ -105,4 +108,9 @@
         android:id="@+id/resetPasswordFragment"
         android:name="com.example.matchbell.feature.auth.ResetPasswordFragment"
         android:label="ResetPasswordFragment" />
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.matchbell.feature.settings.SettingsFragment"
+        android:label="SettingsFragment"
+        tools:layout="@layout/fragment_settings"/>
 </navigation>
