@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.matchbell.data.model.ChangePasswordRequest
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -48,6 +49,17 @@ class SettingsViewModel @Inject constructor(
             } catch (e: Exception) {
                 // 서버 연결 실패 시 에러 메시지
                 _event.emit("오류 발생: ${e.message}")
+            }
+        }
+    }
+    fun changePassword(current: String, new: String) {
+        viewModelScope.launch {
+            val request = ChangePasswordRequest(current, new)
+            val response = authApi.changePassword(request)
+            if (response.isSuccessful) {
+                _event.emit("SUCCESS") // 화면에 성공 알림
+            } else {
+                _event.emit("FAIL") // 화면에 실패 알림
             }
         }
     }

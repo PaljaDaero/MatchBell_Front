@@ -14,6 +14,7 @@ import retrofit2.Response // 이 부분을 수정하세요
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.DELETE
+import com.example.matchbell.data.model.ChangePasswordRequest
 
 interface AuthApi {
     @POST("/auth/login")
@@ -47,4 +48,11 @@ interface AuthApi {
     //백엔드가 주소보내주면 수정하면 됨
     @DELETE("auth/withdraw")
     suspend fun withdrawAccount(): Response<Unit>
+
+    // network/AuthApi.kt
+    @POST("auth/password/change") // 주소는 백엔드가 알려줌
+    suspend fun changePassword(@Body request: ChangePasswordRequest): Response<Unit>
+
+
+
 }

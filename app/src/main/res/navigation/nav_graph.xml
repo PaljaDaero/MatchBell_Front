@@ -116,10 +116,18 @@
         <action
             android:id="@+id/action_settingsFragment_to_profileEditFragment"
             app:destination="@id/profileEditFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_passwordChangeFragment"
+            app:destination="@id/passwordChangeFragment" />
     </fragment>
     <fragment
         android:id="@+id/profileEditFragment"
         android:name="com.example.matchbell.feature.auth.ProfileEditFragment"
         android:label="ProfileEditFragment"
         tools:layout="@layout/fragment_profile_edit" />
+    <fragment
+        android:id="@+id/passwordChangeFragment"
+        android:name="com.example.matchbell.feature.auth.PasswordChangeFragment"
+        android:label="PasswordChangeFragment"
+        tools:layout="@layout/fragment_password_change" />
 </navigation>
