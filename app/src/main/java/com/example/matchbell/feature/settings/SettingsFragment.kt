@@ -32,6 +32,10 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         binding.btnNotification.setOnClickListener {
             findNavController().navigate(R.id.action_settingsFragment_to_notificationSettingsFragment)
         }
+        // [추가] 버전 정보 버튼 클릭
+        binding.btnVersion.setOnClickListener {
+            findNavController().navigate(R.id.action_settingsFragment_to_versionInfoFragment)
+        }
 
         // [추가] 비밀번호 변경 버튼 클릭
         binding.btnPwChange.setOnClickListener {

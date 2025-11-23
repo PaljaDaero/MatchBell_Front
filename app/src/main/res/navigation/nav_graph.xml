@@ -122,6 +122,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_notificationSettingsFragment"
             app:destination="@id/notificationSettingsFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_versionInfoFragment"
+            app:destination="@id/versionInfoFragment" />
     </fragment>
     <fragment
         android:id="@+id/profileEditFragment"
@@ -138,4 +141,9 @@
         android:name="com.example.matchbell.feature.settings.NotificationSettingsFragment"
         android:label="NotificationSettingsFragment"
         tools:layout="@layout/fragment_notification_settings" />
+    <fragment
+        android:id="@+id/versionInfoFragment"
+        android:name="com.example.matchbell.feature.settings.VersionInfoFragment"
+        android:label="VersionInfoFragment"
+        tools:layout="@layout/fragment_version_info" />
 </navigation>
