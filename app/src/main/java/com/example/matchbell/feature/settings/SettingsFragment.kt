@@ -23,6 +23,11 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentSettingsBinding.bind(view)
+        // 프로필 수정 버튼 클릭
+        binding.btnProfileEdit.setOnClickListener {
+            // 아까 뚫어놓은 길(action)로 이동!
+            findNavController().navigate(R.id.action_settingsFragment_to_profileEditFragment)
+        }
 
         // 1. 로그아웃 버튼 클릭
         binding.btnLogout.setOnClickListener {
