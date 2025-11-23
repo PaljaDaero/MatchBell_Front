@@ -119,6 +119,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_passwordChangeFragment"
             app:destination="@id/passwordChangeFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_notificationSettingsFragment"
+            app:destination="@id/notificationSettingsFragment" />
     </fragment>
     <fragment
         android:id="@+id/profileEditFragment"
@@ -130,4 +133,9 @@
         android:name="com.example.matchbell.feature.auth.PasswordChangeFragment"
         android:label="PasswordChangeFragment"
         tools:layout="@layout/fragment_password_change" />
+    <fragment
+        android:id="@+id/notificationSettingsFragment"
+        android:name="com.example.matchbell.feature.settings.NotificationSettingsFragment"
+        android:label="NotificationSettingsFragment"
+        tools:layout="@layout/fragment_notification_settings" />
 </navigation>
