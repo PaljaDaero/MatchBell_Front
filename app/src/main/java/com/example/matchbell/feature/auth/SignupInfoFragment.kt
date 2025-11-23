@@ -55,7 +55,7 @@ class SignupInfoFragment : Fragment(R.layout.fragment_register_info) {
             val id = idInput.text.toString().trim() // [보안] 공백 제거
             val pw = pwInput.text.toString().trim()
             val pwConfirm = pwConfirmInput.text.toString().trim()
-
+            val email = emailInput.text.toString() // 이메일 가져오기
             // --- [보안 수정 시작] 입력값 유효성 검사 강화 ---
 
             // 1. 아이디 검사 (6~20자, 영문/숫자)
@@ -84,10 +84,10 @@ class SignupInfoFragment : Fragment(R.layout.fragment_register_info) {
 
             // ⬇️⬇️⬇️ [DELETE START] 백엔드 연동 완료 시 여기서부터 삭제하세요 ⬇️⬇️⬇️
             // 4. 가짜 서버(MockServer)에 아이디/비번 저장
-            MockServer.register(id, pw)
+            MockServer.register(id, pw, email)
 
             // [보안] 실제 상용 앱에서는 비밀번호를 로그에 찍으면 안됩니다. 개발 단계라 남겨둡니다.
-            println("회원가입 저장됨: $id / $pw")
+            println("회원가입 저장됨: $id / $pw/ $email")
 
 
             // 5. 다음 화면(프로필 설정)으로 이동

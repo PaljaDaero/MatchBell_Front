@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
         bottomNavView.setupWithNavController(navController)
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.splashFragment, R.id.loginFragment, R.id.signupTermsFragment, R.id.signupInfoFragment, R.id.permissionFragment, R.id.profileSetupFragment -> {
+                R.id.splashFragment, R.id.loginFragment, R.id.signupTermsFragment, R.id.signupInfoFragment, R.id.permissionFragment, R.id.profileSetupFragment,R.id.findPasswordFragment,R.id.resetPasswordFragment -> {
                     bottomNavView.visibility = View.GONE
                 }
                 else -> {

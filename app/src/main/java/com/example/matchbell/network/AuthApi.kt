@@ -7,6 +7,9 @@ import com.example.matchbell.data.model.SignupRequest
 import com.example.matchbell.data.model.SignupResponse
 import com.example.matchbell.data.model.EmailRequest
 import com.example.matchbell.data.model.EmailVerifyRequest
+import com.example.matchbell.data.model.ResetPasswordRequest
+import com.example.matchbell.data.model.VerifyCodeRequest
+import com.example.matchbell.data.model.VerifyResponse
 import retrofit2.Response // 이 부분을 수정하세요
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -25,4 +28,19 @@ interface AuthApi {
     // [추가] 3. 이메일 인증번호 확인 API
     @POST("/auth/email/verify")
     suspend fun verifyEmail(@Body request: EmailVerifyRequest): Response<Unit>
+
+    // [추가] 비밀번호 찾기 - 인증번호 전송 요청
+    // [나중에 백엔드가 정해준 주소로 변경]
+    @POST("auth/password/email/send")
+    suspend fun sendPasswordResetCode(@Body body: EmailRequest): Response<Unit>
+
+    // [추가] 비밀번호 찾기 - 인증번호 확인 요청
+    // 서버가 응답으로 "이 사람 맞음!" 하고 userId를 돌려준다고 가정
+    @POST("auth/password/email/verify")
+    suspend fun verifyPasswordResetCode(@Body body: VerifyCodeRequest): Response<VerifyResponse>
+
+    // [추가] 비밀번호 재설정 요청
+    @POST("auth/password/reset")
+    suspend fun resetPassword(@Body body: ResetPasswordRequest): Response<Unit>
+
 }

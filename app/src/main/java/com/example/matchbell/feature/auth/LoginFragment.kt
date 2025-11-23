@@ -30,6 +30,8 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         val loadingBar = view.findViewById<ProgressBar>(R.id.progress_bar)
         val signupText = view.findViewById<TextView>(R.id.tv_signup)
 
+        // (보내주신 XML에 있는 ID인 tv_find_pw를 사용합니다)
+        val findPwText = view.findViewById<TextView>(R.id.tv_find_pw)
         // [보안] 현재 화면 캡처/녹화 방지 켜기
         requireActivity().window.setFlags(
             android.view.WindowManager.LayoutParams.FLAG_SECURE,
@@ -105,6 +107,14 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         // 2. 회원가입 텍스트 클릭
         signupText.setOnClickListener {
             findNavController().navigate(R.id.action_loginFragment_to_signupTermsFragment)
+        }
+        findPwText.setOnClickListener {
+            try {
+                // nav_graph에서 만든 화살표 ID를 적으세요.
+                findNavController().navigate(R.id.action_loginFragment_to_findPasswordFragment)
+            } catch (e: Exception) {
+                Toast.makeText(context, "네비게이션 연결을 확인해주세요!", Toast.LENGTH_SHORT).show()
+            }
         }
 
         // 3. 로딩 상태 관찰
