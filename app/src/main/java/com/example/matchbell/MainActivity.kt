@@ -1,4 +1,4 @@
-package com.example.matchbell
+package com.example.matchbell// (본인 패키지 이름에 맞게 수정하세요!)
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -15,8 +15,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // 1. 방금 수정한 껍데기(activity_main.xml)를 화면에 띄움
         setContentView(R.layout.activity_main)
 
+        // 2. 껍데기에서 '탭 바'와 '빈 공간(지도 관리자)'을 찾아옴
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_container) as NavHostFragment
         val navController = navHostFragment.navController
         val bottomNavView = findViewById<BottomNavigationView>(R.id.bottom_nav_view)
@@ -26,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         bottomNavView.setupWithNavController(navController)
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.splashFragment, R.id.loginFragment, R.id.signupTermsFragment, R.id.signupInfoFragment, R.id.permissionFragment, R.id.profileSetupFragment,R.id.findPasswordFragment,R.id.resetPasswordFragment -> {
+                R.id.splashFragment, R.id.loginFragment, R.id.signupTermsFragment, R.id.signupInfoFragment -> {
                     bottomNavView.visibility = View.GONE
                 }
                 else -> {
@@ -35,4 +37,4 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-}//교수님이 주신 소스코드 코틀린으로 바꿔서 넣기 (csv파일) 리소스저장한데에 넣고, 하면 됨.변경해달라할때 입력하라고 나와있는데 그걸 DB에서 가져오는 걸로 (키로 뽑아쓰는 느낌)
+}
