@@ -10,7 +10,13 @@
         android:id="@+id/chatListFragment"
         android:name="com.example.matchbell.feature.ChatListFragment"
         android:label="fragment_chat_list"
-        tools:layout="@layout/fragment_chat_list" />
+        tools:layout="@layout/fragment_chat_list">
+
+        <action
+            android:id="@+id/action_chatListFragment_to_chatRoomFragment"
+            app:destination="@id/chatRoomFragment" />
+    </fragment>
+
     <fragment
         android:id="@+id/matchingFragment"
         android:name="com.example.matchbell.feature.MatchingFragment"
@@ -73,9 +79,32 @@
     <action
         android:id="@+id/action_splashFragment_to_loginFragment"
         app:destination="@id/loginFragment" />
+
     <fragment
         android:id="@+id/profileSetupFragment"
         android:name="com.example.matchbell.feature.auth.ProfileSetupFragment"
         android:label="fragment_profile_setup"
         tools:layout="@layout/fragment_profile_setup" />
+
+    <!-- 채팅방 Fragment -->
+    <fragment
+        android:id="@+id/chatRoomFragment"
+        android:name="com.example.matchbell.feature.ChatRoomFragment"
+        android:label="채팅방"
+        tools:layout="@layout/fragment_chat_room" >
+
+        <!-- [수정] ChatRoomFragment가 ChatListFragment로부터 받을 Arguments 정의 -->
+        <argument
+            android:name="ROOM_ID"
+            app:argType="string" />
+        <argument
+            android:name="USER_ID"
+            app:argType="string" />
+        <argument
+            android:name="USER_NAME"
+            app:argType="string" />
+        <argument
+            android:name="PROFILE_URL"
+            app:argType="string" />
+    </fragment>
 </navigation>
