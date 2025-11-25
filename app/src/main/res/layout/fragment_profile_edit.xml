@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF0F5"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="24dp">
+
+        <ImageView
+            android:id="@+id/iv_header_bg"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginHorizontal="16dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/bg_message_bar"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <ImageView
+            android:id="@+id/btn_back"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="32dp"
+            android:src="@drawable/ic_arrow_right"
+            android:rotation="180"
+            app:tint="#555555"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/iv_header_bg"
+            app:layout_constraintBottom_toBottomOf="@id/iv_header_bg"/>
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="프로필 수정"
+            android:textColor="#333333"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@id/iv_header_bg"
+            app:layout_constraintEnd_toEndOf="@id/iv_header_bg"
+            app:layout_constraintTop_toTopOf="@id/iv_header_bg"
+            app:layout_constraintBottom_toBottomOf="@id/iv_header_bg" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_profile_image"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            app:cardCornerRadius="50dp"
+            app:cardElevation="0dp"
+            android:layout_marginTop="40dp"
+            app:layout_constraintTop_toBottomOf="@id/iv_header_bg"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageView
+                android:id="@+id/iv_profile_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_profile_default"
+                android:background="#E1BEE7"/>
+        </androidx.cardview.widget.CardView>
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@android:drawable/ic_menu_camera"
+            app:tint="#555555"
+            android:layout_margin="4dp"
+            android:elevation="2dp"
+            app:layout_constraintBottom_toBottomOf="@id/card_profile_image"
+            app:layout_constraintEnd_toEndOf="@id/card_profile_image"/>
+
+        <TextView
+            android:id="@+id/label_nickname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="닉네임"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:layout_marginTop="32dp"
+            android:layout_marginStart="24dp"
+            app:layout_constraintTop_toBottomOf="@id/card_profile_image"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <EditText
+            android:id="@+id/et_nickname"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_white_rounded"
+            android:hint="닉네임을 입력하세요"
+            android:paddingHorizontal="16dp"
+            android:textSize="14sp"
+            app:layout_constraintTop_toBottomOf="@id/label_nickname"/>
+
+        <TextView
+            android:id="@+id/label_job"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="직업"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:layout_marginTop="24dp"
+            android:layout_marginStart="24dp"
+            app:layout_constraintTop_toBottomOf="@id/et_nickname"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <EditText
+            android:id="@+id/et_job"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_white_rounded"
+            android:hint="직업을 입력하세요"
+            android:text="명지대학교 컴퓨터공학과"
+            android:paddingHorizontal="16dp"
+            android:textSize="14sp"
+            app:layout_constraintTop_toBottomOf="@id/label_job"/>
+
+        <TextView
+            android:id="@+id/label_bio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="자기소개"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:layout_marginTop="24dp"
+            android:layout_marginStart="24dp"
+            app:layout_constraintTop_toBottomOf="@id/et_job"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <EditText
+            android:id="@+id/et_bio"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_white_rounded"
+            android:gravity="top|start"
+            android:padding="16dp"
+            android:textSize="14sp"
+            app:layout_constraintTop_toBottomOf="@id/label_bio"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginHorizontal="60dp"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="40dp"
+            android:background="@drawable/bt_my"
+            android:text="확인"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@id/et_bio"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

@@ -5,7 +5,6 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/splashFragment">
 
-    <!-- 메인 탭 Fragment들 -->
     <fragment
         android:id="@+id/chatListFragment"
         android:name="com.example.matchbell.feature.ChatListFragment"
@@ -25,9 +24,12 @@
 
     <fragment
         android:id="@+id/myFragment"
-        android:name="com.example.matchbell.MyFragment"
+        android:name="com.example.matchbell.feature.my.MyFragment"
         android:label="fragment_my"
         tools:layout="@layout/fragment_my" >
+        <action
+            android:id="@+id/action_myFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
     </fragment>
 
     <fragment
@@ -37,7 +39,6 @@
         tools:layout="@layout/fragment_radar" />
 
 
-    <!-- 인증/회원가입 흐름 Fragment들 -->
     <fragment
         android:id="@+id/splashFragment"
         android:name="com.example.matchbell.feature.auth.SplashFragment"
@@ -52,6 +53,9 @@
         <action
             android:id="@+id/action_loginFragment_to_signupTermsFragment"
             app:destination="@id/signupTermsFragment" />
+        <action
+            android:id="@+id/action_loginFragment_to_findPasswordFragment"
+            app:destination="@id/findPasswordFragment" />
     </fragment>
 
     <fragment
@@ -75,7 +79,6 @@
     </fragment>
 
 
-    <!-- Splash에서 Login으로 가는 전역 액션 -->
     <action
         android:id="@+id/action_splashFragment_to_loginFragment"
         app:destination="@id/loginFragment" />
@@ -84,16 +87,18 @@
         android:id="@+id/profileSetupFragment"
         android:name="com.example.matchbell.feature.auth.ProfileSetupFragment"
         android:label="fragment_profile_setup"
-        tools:layout="@layout/fragment_profile_setup" />
+        tools:layout="@layout/fragment_profile_setup" >
+        <action
+            android:id="@+id/action_profileSetupFragment_to_permissionFragment"
+            app:destination="@id/permissionFragment" />
+    </fragment>
 
-    <!-- 채팅방 Fragment -->
     <fragment
         android:id="@+id/chatRoomFragment"
         android:name="com.example.matchbell.feature.ChatRoomFragment"
         android:label="채팅방"
         tools:layout="@layout/fragment_chat_room" >
 
-        <!-- [수정] ChatRoomFragment가 ChatListFragment로부터 받을 Arguments 정의 -->
         <argument
             android:name="ROOM_ID"
             app:argType="string" />
@@ -107,4 +112,63 @@
             android:name="PROFILE_URL"
             app:argType="string" />
     </fragment>
+
+    <fragment
+        android:id="@+id/permissionFragment"
+        android:name="com.example.matchbell.feature.auth.PermissionFragment"
+        android:label="PermissionFragment" >
+        <action
+            android:id="@+id/action_permissionFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/findPasswordFragment"
+        android:name="com.example.matchbell.feature.auth.FindPasswordFragment"
+        android:label="FindPasswordFragment" >
+        <action
+            android:id="@+id/action_findPasswordFragment_to_resetPasswordFragment"
+            app:destination="@id/resetPasswordFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/resetPasswordFragment"
+        android:name="com.example.matchbell.feature.auth.ResetPasswordFragment"
+        android:label="ResetPasswordFragment" />
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.matchbell.feature.settings.SettingsFragment"
+        android:label="SettingsFragment"
+        tools:layout="@layout/fragment_settings">
+        <action
+            android:id="@+id/action_settingsFragment_to_profileEditFragment"
+            app:destination="@id/profileEditFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_passwordChangeFragment"
+            app:destination="@id/passwordChangeFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_notificationSettingsFragment"
+            app:destination="@id/notificationSettingsFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_versionInfoFragment"
+            app:destination="@id/versionInfoFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/profileEditFragment"
+        android:name="com.example.matchbell.feature.auth.ProfileEditFragment"
+        android:label="ProfileEditFragment"
+        tools:layout="@layout/fragment_profile_edit" />
+    <fragment
+        android:id="@+id/passwordChangeFragment"
+        android:name="com.example.matchbell.feature.auth.PasswordChangeFragment"
+        android:label="PasswordChangeFragment"
+        tools:layout="@layout/fragment_password_change" />
+    <fragment
+        android:id="@+id/notificationSettingsFragment"
+        android:name="com.example.matchbell.feature.settings.NotificationSettingsFragment"
+        android:label="NotificationSettingsFragment"
+        tools:layout="@layout/fragment_notification_settings" />
+    <fragment
+        android:id="@+id/versionInfoFragment"
+        android:name="com.example.matchbell.feature.settings.VersionInfoFragment"
+        android:label="VersionInfoFragment"
+        tools:layout="@layout/fragment_version_info" />
 </navigation>
