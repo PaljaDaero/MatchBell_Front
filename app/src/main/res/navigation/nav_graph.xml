@@ -24,13 +24,45 @@
 
     <fragment
         android:id="@+id/myFragment"
-        android:name="com.example.matchbell.feature.my.MyFragment"
+        android:name="com.example.matchbell.feature.MyFragment"
         android:label="fragment_my"
         tools:layout="@layout/fragment_my" >
         <action
             android:id="@+id/action_myFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_my_matching"
+            app:destination="@id/myMatchingFragment" />
+        <action
+            android:id="@+id/action_my_ranking"
+            app:destination="@id/myRankingFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/myMatchingFragment"
+        android:name="com.example.matchbell.feature.MyMatchingFragment"
+        android:label="MyMatchingFragment"
+        tools:layout="@layout/fragment_my_matching">
+        <action
+            android:id="@+id/action_my_matching_result"
+            app:destination="@id/myMatchingResultFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/myMatchingResultFragment"
+        android:name="com.example.matchbell.feature.MyMatchingResultFragment"
+        android:label="MyMatchingResultFragment"
+        tools:layout="@layout/fragment_my_matching_result" >
+        <action
+            android:id="@+id/action_my_matching_result_to_ranking"
+            app:destination="@id/myRankingFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/myRankingFragment"
+        android:name="com.example.matchbell.feature.MyRankingFragment"
+        android:label="MyRankingFragment"
+        tools:layout="@layout/fragment_my_ranking" />
 
     <fragment
         android:id="@+id/radarFragment"
@@ -78,11 +110,9 @@
             app:destination="@id/profileSetupFragment" />
     </fragment>
 
-
     <action
         android:id="@+id/action_splashFragment_to_loginFragment"
         app:destination="@id/loginFragment" />
-
     <fragment
         android:id="@+id/profileSetupFragment"
         android:name="com.example.matchbell.feature.auth.ProfileSetupFragment"

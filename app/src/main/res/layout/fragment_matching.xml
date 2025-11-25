@@ -10,7 +10,7 @@
         android:id="@+id/message_bar"
         android:layout_width="375dp"
         android:layout_height="76dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="25dp"
         app:srcCompat="@drawable/bg_message_bar"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -20,18 +20,18 @@
         android:id="@+id/tv_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:text="당신 바로 옆을 스친 운명의 상대"
+        android:textColor="@android:color/black"
+        android:textSize="14sp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="8dp"
-        android:text="당신 바로 옆을 지나간 운명의 상대"
-        android:textColor="@color/black"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="@id/message_bar"
-        app:layout_constraintEnd_toStartOf="@+id/iv_bell"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintVertical_bias="0.43"
         app:layout_constraintStart_toStartOf="@id/message_bar"
+        app:layout_constraintEnd_toStartOf="@+id/iv_bell"
         app:layout_constraintTop_toTopOf="@id/message_bar"
-        app:layout_constraintVertical_bias="0.43" />
+        app:layout_constraintBottom_toBottomOf="@id/message_bar" />
 
     <ImageView
         android:id="@+id/iv_bell"
@@ -44,6 +44,7 @@
         app:layout_constraintTop_toTopOf="@id/message_bar"
         app:layout_constraintBottom_toBottomOf="@id/message_bar"
         app:layout_constraintStart_toEndOf="@id/tv_message" />
+
 
     <!-- [리스트 스크롤 영역] -->
     <ScrollView
