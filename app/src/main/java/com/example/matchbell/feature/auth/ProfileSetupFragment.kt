@@ -47,6 +47,34 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
             pickImageLauncher.launch("image/*")
         }
 
+        // 2. 생년월일 (⭐⭐⭐ 2000~2021년 제한 추가됨 ⭐⭐⭐)
+        birthDateTextView.setOnClickListener {
+            val calendar = Calendar.getInstance()
+
+            // 기본 선택 위치를 2000년 1월 1일로 설정 (편의성)
+            val defaultYear = 2000
+            val defaultMonth = 0 // 1월
+            val defaultDay = 1
+
+            val datePickerDialog = DatePickerDialog(
+                requireContext(),
+                { _, selectedYear, selectedMonth, selectedDay ->
+                    val formattedDate = "${selectedYear}년 ${selectedMonth + 1}월 ${selectedDay}일"
+                    birthDateTextView.text = formattedDate
+                },
+                defaultYear, defaultMonth, defaultDay
+            )
+
+            // [핵심] 달력 날짜 범위 제한하기
+            val minDate = Calendar.getInstance().apply { set(2000, 0, 1) }.timeInMillis // 2000년 1월 1일
+            val maxDate = Calendar.getInstance().apply { set(2021, 11, 31) }.timeInMillis // 2021년 12월 31일
+
+            datePickerDialog.datePicker.minDate = minDate
+            datePickerDialog.datePicker.maxDate = maxDate
+
+            datePickerDialog.show()
+        }
+        /*
         // 2. 생년월일
         birthDateTextView.setOnClickListener {
             val calendar = Calendar.getInstance()
@@ -64,6 +92,7 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
             )
             datePickerDialog.show()
         }
+         */
 
         // 3. 지역 선택
         regionTextView.setOnClickListener {

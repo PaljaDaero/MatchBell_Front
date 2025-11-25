@@ -98,7 +98,7 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/bg_white_rounded"
-            android:hint="사용할 닉네임을 입력"
+            android:hint="닉네임을 입력하세요"
             android:paddingHorizontal="16dp"
             android:textSize="14sp"
             app:layout_constraintTop_toBottomOf="@id/label_nickname"/>
