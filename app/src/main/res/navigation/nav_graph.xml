@@ -5,12 +5,17 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/splashFragment">
 
-    <!-- 메인 탭 Fragment들 -->
     <fragment
         android:id="@+id/chatListFragment"
         android:name="com.example.matchbell.feature.ChatListFragment"
         android:label="fragment_chat_list"
-        tools:layout="@layout/fragment_chat_list" />
+        tools:layout="@layout/fragment_chat_list">
+
+        <action
+            android:id="@+id/action_chatListFragment_to_chatRoomFragment"
+            app:destination="@id/chatRoomFragment" />
+    </fragment>
+
     <fragment
         android:id="@+id/matchingFragment"
         android:name="com.example.matchbell.feature.MatchingFragment"
@@ -34,7 +39,6 @@
         tools:layout="@layout/fragment_radar" />
 
 
-    <!-- 인증/회원가입 흐름 Fragment들 -->
     <fragment
         android:id="@+id/splashFragment"
         android:name="com.example.matchbell.feature.auth.SplashFragment"
@@ -75,10 +79,10 @@
     </fragment>
 
 
-    <!-- Splash에서 Login으로 가는 전역 액션 -->
     <action
         android:id="@+id/action_splashFragment_to_loginFragment"
         app:destination="@id/loginFragment" />
+
     <fragment
         android:id="@+id/profileSetupFragment"
         android:name="com.example.matchbell.feature.auth.ProfileSetupFragment"
@@ -88,6 +92,27 @@
             android:id="@+id/action_profileSetupFragment_to_permissionFragment"
             app:destination="@id/permissionFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/chatRoomFragment"
+        android:name="com.example.matchbell.feature.ChatRoomFragment"
+        android:label="채팅방"
+        tools:layout="@layout/fragment_chat_room" >
+
+        <argument
+            android:name="ROOM_ID"
+            app:argType="string" />
+        <argument
+            android:name="USER_ID"
+            app:argType="string" />
+        <argument
+            android:name="USER_NAME"
+            app:argType="string" />
+        <argument
+            android:name="PROFILE_URL"
+            app:argType="string" />
+    </fragment>
+
     <fragment
         android:id="@+id/permissionFragment"
         android:name="com.example.matchbell.feature.auth.PermissionFragment"

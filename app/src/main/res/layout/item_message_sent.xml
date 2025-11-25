@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="8dp">
+
+    <!-- 메시지 내용 (말풍선 - 핑크색) -->
+    <TextView
+        android:id="@+id/tv_message_content_sent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_message_bubble_sent"
+        android:maxWidth="250dp"
+        android:padding="10dp"
+        android:textSize="15sp"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="네, 안녕하세요. 오늘 뭐하세요?" />
+
+    <!-- 시간 -->
+    <TextView
+        android:id="@+id/tv_timestamp_sent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="10sp"
+        android:textColor="#AAAAAA"
+        android:layout_marginEnd="4dp"
+        app:layout_constraintBottom_toBottomOf="@id/tv_message_content_sent"
+        app:layout_constraintEnd_toStartOf="@id/tv_message_content_sent"
+        tools:text="오후 3:31" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
