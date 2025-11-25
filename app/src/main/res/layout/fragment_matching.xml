@@ -2,7 +2,6 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFF0F5">
@@ -11,6 +10,7 @@
         android:id="@+id/message_bar"
         android:layout_width="375dp"
         android:layout_height="76dp"
+        android:layout_marginTop="20dp"
         app:srcCompat="@drawable/bg_message_bar"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -20,29 +20,192 @@
         android:id="@+id/tv_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="궁합레이더에서 운명의 상대를 찾아보세요"
-        android:textColor="@color/black"
-        android:textSize="14sp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="8dp"
+        android:text="당신 바로 옆을 지나간 운명의 상대"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="@id/message_bar"
+        app:layout_constraintEnd_toStartOf="@+id/iv_bell"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintHorizontal_chainStyle="packed"
-
         app:layout_constraintStart_toStartOf="@id/message_bar"
-        app:layout_constraintEnd_toStartOf="@+id/iv_bell"
         app:layout_constraintTop_toTopOf="@id/message_bar"
-        app:layout_constraintBottom_toBottomOf="@id/message_bar" />
+        app:layout_constraintVertical_bias="0.43" />
 
     <ImageView
         android:id="@+id/iv_bell"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:src="@drawable/ic_bell"
-        android:layout_marginEnd="32dp"
-
+        android:layout_marginEnd="15dp"
+        app:layout_constraintVertical_bias="0.43"
         app:layout_constraintEnd_toEndOf="@id/message_bar"
         app:layout_constraintTop_toTopOf="@id/message_bar"
         app:layout_constraintBottom_toBottomOf="@id/message_bar"
         app:layout_constraintStart_toEndOf="@id/tv_message" />
 
+    <!-- [리스트 스크롤 영역] -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:paddingBottom="20dp"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/message_bar"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="10dp">
+
+            <!-- [첫 번째 아이템] -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="24dp">
+
+                <ImageButton
+                    android:id="@+id/btn_lock_1"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/ic_lock"
+                    android:scaleType="fitCenter"
+                    android:padding="0dp"
+                    android:contentDescription="잠금 버튼" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="0dp"
+                    android:layout_height="80dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="15dp"
+                    android:background="@drawable/bg_matching_box"
+                    android:paddingHorizontal="15dp">
+
+                    <!-- 1. 궁합 점수 라벨 -->
+                    <!-- 아래쪽(major)과 체인을 걸고 packed 스타일 적용 -->
+                    <TextView
+                        android:id="@+id/tv_score_label_1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="궁합 점수"
+                        android:textSize="15sp"
+                        android:textColor="#333333"
+                        android:textStyle="bold"
+                        app:layout_constraintVertical_chainStyle="packed"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/tv_major_1" />
+
+                    <TextView
+                        android:id="@+id/tv_score_value_1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" 92점"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#EF4444"
+                        app:layout_constraintStart_toEndOf="@id/tv_score_label_1"
+                        app:layout_constraintBaseline_toBaselineOf="@id/tv_score_label_1"/>
+
+                    <!-- 2. 전공 텍스트 -->
+                    <!-- 위쪽(label)과 체인을 걸어 중앙 정렬 -->
+                    <TextView
+                        android:id="@+id/tv_major_1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="명지대학교 뮤지컬과"
+                        android:textColor="#555555"
+                        android:textSize="13sp"
+                        android:layout_marginTop="2dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/tv_score_label_1"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_heart"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"/>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
+
+            <!-- [두 번째 아이템] -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="24dp">
+
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_lock"
+                    android:scaleType="fitCenter" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="0dp"
+                    android:layout_height="80dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="15dp"
+                    android:background="@drawable/bg_matching_box"
+                    android:paddingHorizontal="15dp">
+
+                    <TextView
+                        android:id="@+id/tv_score_label_2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="궁합 점수"
+                        android:textSize="15sp"
+                        android:textColor="#333333"
+                        android:textStyle="bold"
+                        app:layout_constraintVertical_chainStyle="packed"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/tv_major_2" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" 75점"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#EF4444"
+                        app:layout_constraintStart_toEndOf="@id/tv_score_label_2"
+                        app:layout_constraintBaseline_toBaselineOf="@id/tv_score_label_2"/>
+
+                    <TextView
+                        android:id="@+id/tv_major_2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="명지대학교 컴퓨터공학과"
+                        android:textColor="#555555"
+                        android:textSize="13sp"
+                        android:layout_marginTop="2dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/tv_score_label_2"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_heart"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"/>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
