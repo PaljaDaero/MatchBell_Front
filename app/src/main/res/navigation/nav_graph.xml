@@ -5,72 +5,7 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/splashFragment">
 
-    <fragment
-        android:id="@+id/chatListFragment"
-        android:name="com.example.matchbell.feature.ChatListFragment"
-        android:label="fragment_chat_list"
-        tools:layout="@layout/fragment_chat_list">
-
-        <action
-            android:id="@+id/action_chatListFragment_to_chatRoomFragment"
-            app:destination="@id/chatRoomFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/matchingFragment"
-        android:name="com.example.matchbell.feature.MatchingFragment"
-        android:label="fragment_matching"
-        tools:layout="@layout/fragment_matching" />
-
-    <fragment
-        android:id="@+id/myFragment"
-        android:name="com.example.matchbell.feature.MyFragment"
-        android:label="fragment_my"
-        tools:layout="@layout/fragment_my" >
-        <action
-            android:id="@+id/action_myFragment_to_settingsFragment"
-            app:destination="@id/settingsFragment" />
-        <action
-            android:id="@+id/action_my_matching"
-            app:destination="@id/myMatchingFragment" />
-        <action
-            android:id="@+id/action_my_ranking"
-            app:destination="@id/myRankingFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/myMatchingFragment"
-        android:name="com.example.matchbell.feature.MyMatchingFragment"
-        android:label="MyMatchingFragment"
-        tools:layout="@layout/fragment_my_matching">
-        <action
-            android:id="@+id/action_my_matching_result"
-            app:destination="@id/myMatchingResultFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/myMatchingResultFragment"
-        android:name="com.example.matchbell.feature.MyMatchingResultFragment"
-        android:label="MyMatchingResultFragment"
-        tools:layout="@layout/fragment_my_matching_result" >
-        <action
-            android:id="@+id/action_my_matching_result_to_ranking"
-            app:destination="@id/myRankingFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/myRankingFragment"
-        android:name="com.example.matchbell.feature.MyRankingFragment"
-        android:label="MyRankingFragment"
-        tools:layout="@layout/fragment_my_ranking" />
-
-    <fragment
-        android:id="@+id/radarFragment"
-        android:name="com.example.matchbell.RadarFragment"
-        android:label="fragment_radar"
-        tools:layout="@layout/fragment_radar" />
-
-
+    <!-- 초기 화면 및 로그인/회원가입 화면 -->
     <fragment
         android:id="@+id/splashFragment"
         android:name="com.example.matchbell.feature.auth.SplashFragment"
@@ -113,6 +48,7 @@
     <action
         android:id="@+id/action_splashFragment_to_loginFragment"
         app:destination="@id/loginFragment" />
+
     <fragment
         android:id="@+id/profileSetupFragment"
         android:name="com.example.matchbell.feature.auth.ProfileSetupFragment"
@@ -123,12 +59,55 @@
             app:destination="@id/permissionFragment" />
     </fragment>
 
+
+    <!-- 1. 궁합레이더 -->
+    <fragment
+        android:id="@+id/radarFragment"
+        android:name="com.example.matchbell.RadarFragment"
+        android:label="fragment_radar"
+        tools:layout="@layout/fragment_radar" >
+        <action
+            android:id="@+id/action_radarFragment_to_profileDetailFragment"
+            app:destination="@id/profileDetailFragment" />
+    </fragment>
+
+    <!-- 1-1. 상세프로필 -->
+    <activity
+        android:id="@+id/profileDetailFragment"
+        android:name="com.example.matchbell.feature.ProfileActivity"
+        android:label="상세 프로필"
+        tools:layout="@layout/fragment_profile_detail" />
+
+
+    <!-- 2. 매칭리스트 -->
+    <fragment
+        android:id="@+id/matchingFragment"
+        android:name="com.example.matchbell.feature.MatchingFragment"
+        android:label="fragment_matching"
+        tools:layout="@layout/fragment_matching" >
+        <action
+            android:id="@+id/action_matchingFragment_to_profileDetailFragment"
+            app:destination="@id/profileDetailFragment" />
+    </fragment>
+
+
+    <!-- 3. 채팅리스트 -->
+    <fragment
+        android:id="@+id/chatListFragment"
+        android:name="com.example.matchbell.feature.ChatListFragment"
+        android:label="fragment_chat_list"
+        tools:layout="@layout/fragment_chat_list">
+        <action
+            android:id="@+id/action_chatListFragment_to_chatRoomFragment"
+            app:destination="@id/chatRoomFragment" />
+    </fragment>
+
+    <!-- 3-1. 채팅방 -->
     <fragment
         android:id="@+id/chatRoomFragment"
         android:name="com.example.matchbell.feature.ChatRoomFragment"
         android:label="채팅방"
         tools:layout="@layout/fragment_chat_room" >
-
         <argument
             android:name="ROOM_ID"
             app:argType="string" />
@@ -141,8 +120,30 @@
         <argument
             android:name="PROFILE_URL"
             app:argType="string" />
+        <action
+            android:id="@+id/action_chatRoomFragment_to_profileDetailFragment"
+            app:destination="@id/profileDetailFragment" />
     </fragment>
 
+
+    <!-- 4. 마이페이지 -->
+    <fragment
+        android:id="@+id/myFragment"
+        android:name="com.example.matchbell.feature.MyFragment"
+        android:label="fragment_my"
+        tools:layout="@layout/fragment_my" >
+        <action
+            android:id="@+id/action_myFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_my_matching"
+            app:destination="@id/myMatchingFragment" />
+        <action
+            android:id="@+id/action_my_ranking"
+            app:destination="@id/myRankingFragment" />
+    </fragment>
+
+    <!-- 4-1. 설정 창-->
     <fragment
         android:id="@+id/permissionFragment"
         android:name="com.example.matchbell.feature.auth.PermissionFragment"
@@ -151,6 +152,7 @@
             android:id="@+id/action_permissionFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/findPasswordFragment"
         android:name="com.example.matchbell.feature.auth.FindPasswordFragment"
@@ -159,10 +161,12 @@
             android:id="@+id/action_findPasswordFragment_to_resetPasswordFragment"
             app:destination="@id/resetPasswordFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/resetPasswordFragment"
         android:name="com.example.matchbell.feature.auth.ResetPasswordFragment"
         android:label="ResetPasswordFragment" />
+
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.example.matchbell.feature.settings.SettingsFragment"
@@ -181,24 +185,58 @@
             android:id="@+id/action_settingsFragment_to_versionInfoFragment"
             app:destination="@id/versionInfoFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/profileEditFragment"
         android:name="com.example.matchbell.feature.auth.ProfileEditFragment"
         android:label="ProfileEditFragment"
         tools:layout="@layout/fragment_profile_edit" />
+
     <fragment
         android:id="@+id/passwordChangeFragment"
         android:name="com.example.matchbell.feature.auth.PasswordChangeFragment"
         android:label="PasswordChangeFragment"
         tools:layout="@layout/fragment_password_change" />
+
     <fragment
         android:id="@+id/notificationSettingsFragment"
         android:name="com.example.matchbell.feature.settings.NotificationSettingsFragment"
         android:label="NotificationSettingsFragment"
         tools:layout="@layout/fragment_notification_settings" />
+
     <fragment
         android:id="@+id/versionInfoFragment"
         android:name="com.example.matchbell.feature.settings.VersionInfoFragment"
         android:label="VersionInfoFragment"
         tools:layout="@layout/fragment_version_info" />
+
+    <!-- 4-2. 나만의 궁합 -->
+    <fragment
+        android:id="@+id/myMatchingFragment"
+        android:name="com.example.matchbell.feature.MyMatchingFragment"
+        android:label="MyMatchingFragment"
+        tools:layout="@layout/fragment_my_matching">
+        <action
+            android:id="@+id/action_my_matching_result"
+            app:destination="@id/myMatchingResultFragment" />
+    </fragment>
+
+    <!-- 4-2-1. 나만의 궁합 결과 -->
+    <fragment
+        android:id="@+id/myMatchingResultFragment"
+        android:name="com.example.matchbell.feature.MyMatchingResultFragment"
+        android:label="MyMatchingResultFragment"
+        tools:layout="@layout/fragment_my_matching_result" >
+        <action
+            android:id="@+id/action_my_matching_result_to_ranking"
+            app:destination="@id/myRankingFragment" />
+    </fragment>
+
+    <!-- 4-3. 궁합 랭킹 -->
+    <fragment
+        android:id="@+id/myRankingFragment"
+        android:name="com.example.matchbell.feature.MyRankingFragment"
+        android:label="MyRankingFragment"
+        tools:layout="@layout/fragment_my_ranking" />
+
 </navigation>

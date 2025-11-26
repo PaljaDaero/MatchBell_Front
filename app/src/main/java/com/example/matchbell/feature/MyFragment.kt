@@ -53,10 +53,6 @@ class MyFragment : Fragment() {
         // binding.tvName.text = "김명지"
     }
 
-    /**
-     * 쿠키 충전 팝업을 표시하는 함수입니다.
-     * R.layout.dialog_ranking 파일을 쿠키 다이얼로그 레이아웃으로 사용합니다.
-     */
     private fun showCookieDialog() {
         // 1. AlertDialog Builder 생성
         val builder = AlertDialog.Builder(requireContext())
@@ -67,7 +63,7 @@ class MyFragment : Fragment() {
 
         // 3. Dialog 생성
         val dialog = builder.create()
-        // 둥근 배경 Drawable을 사용하기 위해 기본 창 배경을 투명하게 설정합니다.
+
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
         // 4. 다이얼로그 내 버튼 클릭 리스너 설정
@@ -76,9 +72,7 @@ class MyFragment : Fragment() {
 
         // 쿠키 충전 버튼 로직
         chargeButton.setOnClickListener {
-            // 여기에 쿠키 충전 로직 또는 충전 화면으로 이동하는 네비게이션을 구현합니다.
             // findNavController().navigate(R.id.action_show_charge_screen)
-            dialog.dismiss() // 다이얼로그 닫기
         }
 
         // 닫기 버튼 로직

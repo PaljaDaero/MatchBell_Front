@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -15,12 +16,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.matchbell.R
+import com.example.matchbell.databinding.FragmentChatRoomBinding
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-// ChatRoomFragment.kt
 class ChatRoomFragment : Fragment() {
 
     private lateinit var rvChatMessages: RecyclerView
@@ -38,6 +39,9 @@ class ChatRoomFragment : Fragment() {
     private var otherProfileUrl: String? = null
 
     private val myUserId = "current_user_id_123" // 현재 사용자 ID
+
+    private var _binding: FragmentChatRoomBinding? = null
+    private val binding get() = _binding!!
 
     // 메시지 데이터 구조 정의 (로컬/Adapter용)
     data class Message(
@@ -71,12 +75,12 @@ class ChatRoomFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // 1. UI 요소 바인딩
-        tvUserName = view.findViewById(R.id.tv_user_name)
-        tvMatchScore = view.findViewById(R.id.tv_match_score)
-        ivProfile = view.findViewById(R.id.iv_profile_chat_room)
-        rvChatMessages = view.findViewById(R.id.rv_chat_messages)
-        etMessageInput = view.findViewById(R.id.et_message_input)
-        btnSend = view.findViewById(R.id.btn_send)
+        tvUserName = binding.tvUserName
+        tvMatchScore = binding.tvMatchScore
+        ivProfile = binding.ivProfileChatRoom
+        rvChatMessages = binding.rvChatMessages
+        etMessageInput = binding.etMessageInput
+        btnSend = binding.btnSend
 
         // 2. 상단바 정보 설정
         tvUserName.text = otherUserName ?: "상대방"
@@ -105,9 +109,19 @@ class ChatRoomFragment : Fragment() {
         }
         rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
 
-        // 상단 뒤로가기 버튼: findNavController()를 사용하여 네비게이션 스택을 팝합니다.
+        // 홈 버튼: 네비게이션 스택을 팝함
         view.findViewById<View>(R.id.iv_home).setOnClickListener {
             findNavController().popBackStack()
+        }
+
+        // 차단 버튼: dialog를 띄워 버튼 선택하게 함
+        binding.btnReport.setOnClickListener {
+            showReportDialog()
+        }
+
+        // 더보기 버튼: 상세페이지(fragment_profile_detail)로 이동하게 함
+        binding.btnMore.setOnClickListener {
+            findNavController().navigate(R.id.action_chatRoomFragment_to_profileDetailFragment)
         }
 
         // 5. 이벤트 리스너
@@ -158,6 +172,35 @@ class ChatRoomFragment : Fragment() {
         }
     }
 
+    private fun showReportDialog() {
+        // 1. AlertDialog Builder 생성
+        val builder = AlertDialog.Builder(requireContext())
+
+        // 2. Custom Layout 인플레이트 (R.layout.dialog_ranking 사용)
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_report, null)
+        builder.setView(dialogView)
+
+        // 3. Dialog 생성
+        val dialog = builder.create()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        // 4. 다이얼로그 내 버튼 클릭 리스너 설정
+        val chargeButton = dialogView.findViewById<Button>(R.id.btn_dialog_report)
+        val closeButton = dialogView.findViewById<Button>(R.id.btn_dialog_close)
+
+        // 차단 버튼 로직
+        chargeButton.setOnClickListener {
+        }
+
+        // 닫기 버튼 로직
+        closeButton.setOnClickListener {
+            dialog.dismiss() // 다이얼로그 닫기
+        }
+
+        // 5. 다이얼로그 표시
+        dialog.show()
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         // WebSocket 관련 정리 코드 제거

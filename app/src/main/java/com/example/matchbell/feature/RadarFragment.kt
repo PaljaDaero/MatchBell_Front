@@ -18,10 +18,14 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
+// TODO: RadarUser 데이터 클래스에 소속 및 상태 필드를 추가합니다.
 data class RadarUser(
     val id: Int,
     val score: Int,
-    val name: String
+    val name: String,
+    val affiliation: String = "명지대학교 뮤지컬과", // 다이얼로그에 표시될 소속
+    var isCuriositySent: Boolean = false, // 내가 이미 궁금해요를 보냈는지 여부 (옵션)
+    var isMutualCuriosity: Boolean = false // 쌍방 궁금해요가 성립되었는지 여부
 )
 
 class RadarFragment : Fragment() {
@@ -44,11 +48,12 @@ class RadarFragment : Fragment() {
 
         startRadarPulseAnimation()
 
+        // TODO: Dummy Data에 새로운 필드 값을 추가합니다.
         val dummyData = listOf(
-            RadarUser(1, 95, "UserA"),
-            RadarUser(2, 80, "UserB"),
-            RadarUser(3, 72, "UserC"),
-            RadarUser(4, 60, "UserD")
+            RadarUser(1, 95, "은우사마", "명지대학교 뮤지컬과", isMutualCuriosity = false),
+            RadarUser(2, 80, "지민쓰", "고려대학교 경영학과", isCuriositySent = true),
+            RadarUser(3, 72, "태현K", "연세대학교 화학공학과", isMutualCuriosity = true), // 쌍방 궁금해요 시뮬레이션
+            RadarUser(4, 60, "수지P", "서울대학교 법학과")
         )
 
         binding.radarContainer.post {
@@ -182,9 +187,20 @@ class RadarFragment : Fragment() {
             itemView.translationX = xOffset
             itemView.translationY = yOffset
 
+            // TODO: 아이템 클릭 시 팝업 띄우는 로직 추가
             itemView.setOnClickListener {
                 tvClick.clearAnimation()
                 tvClick.visibility = View.GONE
+
+                // RadarDialogFragment 인스턴스 생성 및 표시
+                val dialog = RadarDialogFragment.newInstance(
+                    user.id,
+                    user.name,
+                    user.affiliation,
+                    user.score,
+                    user.isMutualCuriosity
+                )
+                dialog.show(parentFragmentManager, "RadarDialog")
             }
 
             container.addView(itemView)
