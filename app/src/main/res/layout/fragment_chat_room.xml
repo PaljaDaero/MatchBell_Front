@@ -13,7 +13,7 @@
         android:id="@+id/cl_chat_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="23dp"
         android:minHeight="80dp"
         android:background="@color/white"
         android:paddingVertical="8dp"
@@ -87,8 +87,8 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent">
 
-            <ImageView
-                android:id="@+id/iv_report"
+            <Button
+                android:id="@+id/btn_report"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/ic_report"
@@ -96,8 +96,8 @@
                 android:layout_marginEnd="8dp" />
 
             <!-- 더보기 버튼이 누락되어 다시 추가했습니다. -->
-            <ImageView
-                android:id="@+id/iv_more"
+            <Button
+                android:id="@+id/btn_more"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/ic_plus"

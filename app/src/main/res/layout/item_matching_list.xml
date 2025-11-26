@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:layout_marginBottom="24dp">
+
+    <ImageButton
+        android:id="@+id/btn_lock"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_lock"
+        android:scaleType="fitCenter"
+        android:padding="0dp"
+        android:contentDescription="잠금 버튼" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="200dp"
+        android:layout_height="80dp"
+
+        android:background="@drawable/bg_matching_box"
+        android:paddingHorizontal="15dp">
+
+        <!-- 1. 궁합 점수 라벨 --><TextView
+        android:id="@+id/tv_score_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="궁합 점수"
+        android:textSize="15sp"
+        android:textColor="#333333"
+        android:textStyle="bold"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tv_affiliation" />
+
+        <TextView
+            android:id="@+id/tv_score_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" 92점"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#EF4444"
+            app:layout_constraintStart_toEndOf="@id/tv_score_label"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_score_label"/>
+
+        <!-- 2. 전공 텍스트 --><TextView
+        android:id="@+id/tv_affiliation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="명지대학교 뮤지컬과"
+        android:textColor="#555555"
+        android:textSize="13sp"
+        android:layout_marginTop="2dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_score_label"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 3. 궁금해요 하트 버튼 (ConstraintLayout 외부로 이동, 원상 복구) -->
+    <FrameLayout
+        android:id="@+id/fl_like_heart"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:layout_marginStart="10dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:id="@+id/iv_heart_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter"
+            android:contentDescription="궁금해요 하트 아이콘"
+            android:src="@drawable/ic_heart"/>
+
+        <TextView
+            android:id="@+id/tv_like_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="궁금해요"
+            android:textColor="@android:color/white"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:layout_marginBottom="5dp"/>
+    </FrameLayout>
+</LinearLayout>

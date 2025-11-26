@@ -1,9 +1,11 @@
-package com.example.matchbell.feature.my // 패키지명은 본인 프로젝트에 맞게 확인해주세요 (feature.my 등)
+package com.example.matchbell.feature
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.matchbell.R
@@ -29,32 +31,57 @@ class MyFragment : Fragment() {
 
         // 1. 설정 버튼 클릭 (주석 해제 및 연결)
         binding.ivSettings.setOnClickListener {
-            // nav_graph.xml에 등록한 '화살표 ID' 또는 '도착지 ID'를 적어야 합니다.
-            // 아래 코드는 "MyFragment에서 SettingsFragment로 가는 화살표"를 타라! 는 뜻입니다.
             findNavController().navigate(R.id.action_myFragment_to_settingsFragment)
         }
 
-        /* 아래 버튼들은 아직 연결할 화면(Fragment)을 안 만드셨다면
-           앱이 죽을 수 있으므로, 일단 주석 상태로 두거나 Toast 메시지만 띄우세요.
-        */
-
-        // 2. 오늘의 운세 버튼
-        binding.btnTodayFortune.setOnClickListener {
-            // findNavController().navigate(R.id.action_my_to_fortune) // 나중에 추가
+        // 2. 쿠키 버튼
+        binding.btnCookie.setOnClickListener {
+            showCookieDialog()
         }
 
         // 3. 나만의 궁합 버튼
         binding.btnMyMatching.setOnClickListener {
-            // findNavController().navigate(R.id.action_my_to_matching) // 나중에 추가
+            findNavController().navigate(R.id.action_my_matching)
         }
 
         // 4. 궁합 랭킹 버튼
         binding.btnMyRanking.setOnClickListener {
-            // findNavController().navigate(R.id.action_my_to_ranking) // 나중에 추가
+            findNavController().navigate(R.id.action_my_ranking)
         }
 
         // 5. 서버 데이터 연동 예시
         // binding.tvName.text = "김명지"
+    }
+
+    private fun showCookieDialog() {
+        // 1. AlertDialog Builder 생성
+        val builder = AlertDialog.Builder(requireContext())
+
+        // 2. Custom Layout 인플레이트 (R.layout.dialog_ranking 사용)
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_cookie, null)
+        builder.setView(dialogView)
+
+        // 3. Dialog 생성
+        val dialog = builder.create()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        // 4. 다이얼로그 내 버튼 클릭 리스너 설정
+        val chargeButton = dialogView.findViewById<Button>(R.id.btn_dialog_charge)
+        val closeButton = dialogView.findViewById<Button>(R.id.btn_dialog_close)
+
+        // 쿠키 충전 버튼 로직
+        chargeButton.setOnClickListener {
+            // findNavController().navigate(R.id.action_show_charge_screen)
+        }
+
+        // 닫기 버튼 로직
+        closeButton.setOnClickListener {
+            dialog.dismiss() // 다이얼로그 닫기
+        }
+
+        // 5. 다이얼로그 표시
+        dialog.show()
     }
 
     override fun onDestroyView() {

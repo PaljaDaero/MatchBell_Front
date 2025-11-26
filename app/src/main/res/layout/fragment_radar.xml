@@ -22,14 +22,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="궁합레이더에서 운명의 상대를 찾아보세요"
-        android:textColor="@color/black"
+        android:textColor="@android:color/black"
         android:textSize="14sp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="8dp"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintVertical_bias="0.43"
-
         app:layout_constraintStart_toStartOf="@id/message_bar"
         app:layout_constraintEnd_toStartOf="@+id/iv_bell"
         app:layout_constraintTop_toTopOf="@id/message_bar"
@@ -42,7 +41,6 @@
         android:src="@drawable/ic_bell"
         android:layout_marginEnd="15dp"
         app:layout_constraintVertical_bias="0.43"
-
         app:layout_constraintEnd_toEndOf="@id/message_bar"
         app:layout_constraintTop_toTopOf="@id/message_bar"
         app:layout_constraintBottom_toBottomOf="@id/message_bar"

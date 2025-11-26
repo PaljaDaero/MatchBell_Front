@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF0F5">
+
+    <!-- ======================= 1. 상단 메시지 바 ======================= -->
+    <ImageView
+        android:id="@+id/message_bar"
+        android:layout_width="375dp"
+        android:layout_height="76dp"
+        android:layout_marginTop="25dp"
+        app:srcCompat="@drawable/bg_message_bar"
+        android:contentDescription="@null"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="자신만의 궁합을 찾아보세요"
+        android:textColor="@android:color/black"
+        android:textSize="14sp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintVertical_bias="0.43"
+        app:layout_constraintStart_toStartOf="@id/message_bar"
+        app:layout_constraintEnd_toStartOf="@+id/iv_bell"
+        app:layout_constraintTop_toTopOf="@id/message_bar"
+        app:layout_constraintBottom_toBottomOf="@id/message_bar" />
+
+    <ImageView
+        android:id="@+id/iv_bell"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_bell"
+        android:contentDescription="알림 아이콘"
+        android:layout_marginEnd="15dp"
+        app:layout_constraintVertical_bias="0.43"
+        app:layout_constraintEnd_toEndOf="@id/message_bar"
+        app:layout_constraintTop_toTopOf="@id/message_bar"
+        app:layout_constraintBottom_toBottomOf="@id/message_bar"
+        app:layout_constraintStart_toEndOf="@id/tv_message" />
+
+    <!-- ======================= 2. 상대방 정보 입력 섹션 ======================= -->
+
+    <!-- 상대의 이름 라벨 -->
+    <TextView
+        android:id="@+id/tv_name_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="상대의 이름"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
+        android:layout_marginTop="50dp"
+        android:layout_marginStart="32dp"
+        app:layout_constraintTop_toBottomOf="@id/message_bar"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- 상대의 이름 입력 필드 -->
+    <EditText
+        android:id="@+id/et_name"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_border_box"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:inputType="text"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="32dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_name_label"
+        app:layout_constraintStart_toStartOf="@id/tv_name_label"
+        app:layout_constraintEnd_toEndOf="parent" />
+    <!-- 주: bg_edittext_rounded는 흰색 배경과 둥근 모서리를 가진 사용자 정의 Drawable이어야 합니다. -->
+
+    <!-- 상대의 성별 라벨 -->
+    <TextView
+        android:id="@+id/tv_gender_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="상대의 성별"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toBottomOf="@id/et_name"
+        app:layout_constraintStart_toStartOf="@id/tv_name_label" />
+
+    <!-- 성별 체크박스 그룹 -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl_gender_group"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_gender_label"
+        app:layout_constraintStart_toStartOf="@id/tv_name_label"
+        app:layout_constraintEnd_toEndOf="@id/et_name">
+
+        <!-- 남성 체크박스 -->
+        <CheckBox
+            android:id="@+id/cb_male"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="남"
+            android:checked="true"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            app:buttonTint = "#F3A6B5"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- 여성 체크박스 -->
+        <CheckBox
+            android:id="@+id/cb_female"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="여"
+            android:checked="false"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:layout_marginStart="32dp"
+            app:buttonTint = "#F3A6B5"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/cb_male" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 상대의 생년월일 라벨 -->
+    <TextView
+        android:id="@+id/tv_dob_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="상대의 생년월일"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toBottomOf="@id/cl_gender_group"
+        app:layout_constraintStart_toStartOf="@id/tv_name_label" />
+
+    <!-- 상대의 생년월일 입력 필드 -->
+    <EditText
+        android:id="@+id/et_dob"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_border_box"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:inputType="date"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_dob_label"
+        app:layout_constraintStart_toStartOf="@id/tv_name_label"
+        app:layout_constraintEnd_toEndOf="@id/et_name" />
+
+    <!-- 궁합 결과 보기 버튼 -->
+    <Button
+        android:id="@+id/btn_result"
+        android:layout_width="250dp"
+        android:layout_height="56dp"
+        android:text="궁합 결과 보기"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:background="@drawable/bt_my"
+        android:layout_marginTop="60dp"
+        app:layout_constraintTop_toBottomOf="@id/et_dob"
+        app:layout_constraintStart_toStartOf="@id/tv_name_label"
+        app:layout_constraintEnd_toEndOf="@id/et_name" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

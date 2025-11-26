@@ -8,7 +8,6 @@
     android:background="#FFF0F5"
     tools:context=".feature.ChatListFragment">
 
-    <!-- ======================= 1. 사용자 제공 상단 바 영역 (Header - Base Structure) ======================= -->
     <ImageView
         android:id="@+id/message_bar"
         android:layout_width="375dp"
@@ -23,15 +22,14 @@
         android:id="@+id/tv_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="운명의 상대와 대화를 시작해보세요"
-        android:textColor="@color/black"
+        android:text="운명의 상대와 이야기를 시작해보세요"
+        android:textColor="@android:color/black"
         android:textSize="14sp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="8dp"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintVertical_bias="0.43"
-
         app:layout_constraintStart_toStartOf="@id/message_bar"
         app:layout_constraintEnd_toStartOf="@+id/iv_bell"
         app:layout_constraintTop_toTopOf="@id/message_bar"
@@ -44,13 +42,10 @@
         android:src="@drawable/ic_bell"
         android:layout_marginEnd="15dp"
         app:layout_constraintVertical_bias="0.43"
-
         app:layout_constraintEnd_toEndOf="@id/message_bar"
         app:layout_constraintTop_toTopOf="@id/message_bar"
         app:layout_constraintBottom_toBottomOf="@id/message_bar"
         app:layout_constraintStart_toEndOf="@id/tv_message" />
-    <!-- End of 사용자 제공 상단 바 영역 -->
-
 
     <!-- ======================= 2. 채팅 목록 영역 (RecyclerView) ======================= -->
     <androidx.recyclerview.widget.RecyclerView
