@@ -15,6 +15,10 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.DELETE
 import com.example.matchbell.data.model.ChangePasswordRequest
+import com.example.matchbell.data.model.*
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import retrofit2.http.*
 
 interface AuthApi {
     @POST("/auth/login")
@@ -53,6 +57,12 @@ interface AuthApi {
     @POST("auth/password/change") // 주소는 백엔드가 알려줌
     suspend fun changePassword(@Body request: ChangePasswordRequest): Response<Unit>
 
-
+    // [수정] 이렇게 @Multipart가 붙어있어야 에러가 사라집니다!
+    @Multipart
+    @POST("/members/join")
+    suspend fun signup(
+        @Part("request") request: RequestBody,
+        @Part file: MultipartBody.Part?
+    ): Response<SignupResponse>
 
 }
