@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
                     R.id.loginFragment,
                     R.id.signupTermsFragment,
                     R.id.signupInfoFragment,
-                    R.id.chatRoomFragment -> {
+                    R.id.chatRoomFragment,R.id.permissionFragment,R.id.profileSetupFragment -> {
                         navView.visibility = View.GONE
                     }
                     else -> {

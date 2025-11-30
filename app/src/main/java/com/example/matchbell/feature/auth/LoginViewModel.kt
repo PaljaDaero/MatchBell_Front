@@ -3,49 +3,51 @@ package com.example.matchbell.feature.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.matchbell.data.model.LoginRequest
+import com.example.matchbell.data.model.AuthResponse // 위에서 만든 파일 import
 import com.example.matchbell.network.AuthApi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow // 💡 새로 추가된 import
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow // 💡 새로 추가된 import
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+// 로그인 성공 시 결과를 담을 이벤트 클래스
+sealed class LoginEvent {
+    data class Success(val tokens: AuthResponse) : LoginEvent()
+    data class Error(val message: String) : LoginEvent()         // 실패 (에러 메시지)
+    object Loading : LoginEvent()                                // 로딩 중
+}
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authApi: AuthApi
 ) : ViewModel() {
 
-    // 1. 화면 이동/에러 메시지용 신호 (일회성 이벤트)
-    private val _loginEvent = MutableSharedFlow<String>()
+    private val _loginEvent = MutableSharedFlow<LoginEvent>()
     val loginEvent = _loginEvent.asSharedFlow()
 
-    // 2. [추가] 로딩 상태 신호 (상태 유지)
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.asStateFlow()
-
-    fun onLoginButtonClicked(id: String, pw: String) {
+    // 로그인 버튼 누르면 실행되는 함수
+    fun onLoginButtonClicked(email: String, pw: String) {
         viewModelScope.launch {
-            // 로딩 시작!
-            _isLoading.value = true
+            _loginEvent.emit(LoginEvent.Loading) // 로딩 시작
 
             try {
-                val request = LoginRequest(id, pw)
+                // 1. 서버에 로그인 요청 (이메일, 비번)
+                val request = LoginRequest(email, pw)
                 val response = authApi.login(request)
 
-                if (response.isSuccessful) {
-                    _loginEvent.emit("SUCCESS")
+                if (response.isSuccessful && response.body() != null) {
+                    // 2. 성공 시: 토큰을 받아서 화면으로 넘김
+                    val tokens = response.body()!!
+                    _loginEvent.emit(LoginEvent.Success(tokens))
                 } else {
-                    // response.code()를 사용하여 실패 코드를 전달
-                    _loginEvent.emit("FAIL: ${response.code()}")
+                    // 3. 실패 시 (비번 틀림 등)
+                    _loginEvent.emit(LoginEvent.Error("로그인 실패: 아이디나 비밀번호를 확인해주세요."))
                 }
             } catch (e: Exception) {
-                // 네트워크 에러 처리
-                _loginEvent.emit("ERROR: ${e.message}")
-            } finally {
-                // 성공하든 실패하든 로딩 끝!
-                _isLoading.value = false
+                // 4. 에러 시 (서버 꺼짐, 인터넷 끊김)
+                _loginEvent.emit(LoginEvent.Error("네트워크 오류: ${e.message}"))
+                e.printStackTrace()
             }
         }
     }

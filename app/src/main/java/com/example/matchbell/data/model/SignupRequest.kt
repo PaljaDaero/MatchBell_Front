@@ -1,10 +1,10 @@
 package com.example.matchbell.data.model
 
 data class SignupRequest(
-    val email: String,      // 아이디 대신 이메일 사용
-    val password: String,
+    val email: String,
+    val pwd: String,       // password -> pwd 로 변경됨
     val nickname: String,
-    val name: String,       // 이름 (실명)
-    val birthday: String,   // 생년월일 (예: 2000-01-01)
-    val gender: String      // 성별 (MALE/FEMALE)
+    val birth: String,     // "yyyy-MM-dd" 형식
+    val gender: String,    // "FEMALE" or "MALE"
+    val job: String        // 새로 추가됨
 )

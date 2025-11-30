@@ -1,12 +1,12 @@
 package com.example.matchbell.feature.auth
 
 import android.os.Bundle
-import android.util.Patterns
 import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
-import android.widget.TextView // TextView 추가
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -25,73 +25,98 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val idInput = view.findViewById<EditText>(R.id.et_id)
+        // [보안] 캡처 방지
+        requireActivity().window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
+        // 뷰 찾기
+        val emailInput = view.findViewById<EditText>(R.id.et_id) // ID는 et_id지만 내용은 이메일
         val passwordInput = view.findViewById<EditText>(R.id.et_password)
         val loginButton = view.findViewById<Button>(R.id.btn_login)
         val loadingBar = view.findViewById<ProgressBar>(R.id.progress_bar)
         val signupText = view.findViewById<TextView>(R.id.tv_signup)
+        val findPwText = view.findViewById<TextView>(R.id.tv_find_pw) // 비밀번호 찾기 버튼
 
         // 1. 로그인 버튼 클릭
         loginButton.setOnClickListener {
-            val id = idInput.text.toString().trim()
+            val email = emailInput.text.toString().trim()
             val pw = passwordInput.text.toString().trim()
 
-            if (id == "admin" && pw == "admin") { // 백엔드 구축 완료 시 제거할 부분
-                Toast.makeText(context, "관리자 모드 (테스트)", Toast.LENGTH_SHORT).show()
-                findNavController().navigate(R.id.radarFragment)
+            // 빈칸 검사
+            if (email.isEmpty()) {
+                Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                emailInput.requestFocus()
                 return@setOnClickListener
             }
-
-            if (id.isEmpty()) {
-                Toast.makeText(context, "아이디를 입력해주세요.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            if (!isValidUsername(id)) {
-                Toast.makeText(context, "올바른 아이디 형식이 아닙니다. (6~20자의 영문, 숫자)", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
-            }
-
             if (pw.isEmpty()) {
                 Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                passwordInput.requestFocus()
                 return@setOnClickListener
             }
 
-            viewModel.onLoginButtonClicked(id, pw)
+            // [실행] ViewModel에게 진짜 로그인 요청!
+            viewModel.onLoginButtonClicked(email, pw)
         }
 
-        // 2. 회원가입 텍스트 클릭 (기존 로직 유지)
+        // 2. 회원가입 버튼 클릭
         signupText.setOnClickListener {
             findNavController().navigate(R.id.action_loginFragment_to_signupTermsFragment)
         }
 
-        // 3. 로딩 상태 관찰 (기존 로직 유지)
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.isLoading.collect { isLoading ->
-                loadingBar.isVisible = isLoading
-                loginButton.isEnabled = !isLoading
-                loginButton.text = if (isLoading) "로딩 중..." else "확인"
+        // 3. 비밀번호 찾기 버튼 클릭
+        findPwText.setOnClickListener {
+            try {
+                findNavController().navigate(R.id.action_loginFragment_to_findPasswordFragment)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
 
-        // 4. 로그인 결과 관찰 (기존 로직 유지)
+        // 4. [핵심] 로그인 결과 받기 (AuthResponse 대응 수정)
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.loginEvent.collect { event ->
-                when {
-                    event == "SUCCESS" -> {
+                when (event) {
+                    is LoginEvent.Loading -> {
+                        loadingBar.isVisible = true
+                        loginButton.isEnabled = false
+                        loginButton.text = "로그인 중..."
+                    }
+
+                    is LoginEvent.Success -> {
+                        loadingBar.isVisible = false
+                        loginButton.isEnabled = true
+                        loginButton.text = "확인"
+
+                        // ⭐⭐⭐ [수정됨] AuthResponse 구조에 맞춰 저장 ⭐⭐⭐
+                        // event.tokens는 이제 AuthResponse 타입입니다.
+                        // accessToken 대신 jwt 필드를 사용하고, 리프레시 토큰은 없으므로 공백 처리합니다.
+                        TokenManager.saveTokens(
+                            requireContext(),
+                            event.tokens.jwt,  // [변경] accessToken -> jwt
+                            ""                 // [변경] refreshToken -> 없음("")
+                        )
+
                         Toast.makeText(context, "로그인 성공!", Toast.LENGTH_SHORT).show()
+
+                        // 메인 화면으로 이동
                         findNavController().navigate(R.id.radarFragment)
                     }
-                    else -> {
-                        Toast.makeText(context, event, Toast.LENGTH_SHORT).show()
+
+                    is LoginEvent.Error -> {
+                        loadingBar.isVisible = false
+                        loginButton.isEnabled = true
+                        loginButton.text = "확인"
+                        Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         }
     }
-    private fun isValidUsername(username: String): Boolean {
-        // [a-zA-Z0-9]{6,20} : 영문 대소문자, 숫자만 허용하며, 6자에서 20자 사이
-        if (username == "admin") return true; // 백엔드 구축 완료 시 제거할 부분ㅁ
-        return username.matches("^[a-zA-Z0-9]{6,20}$".toRegex())
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
 }
