@@ -52,14 +52,22 @@ class SettingsViewModel @Inject constructor(
             }
         }
     }
+    // SettingsViewModel.kt 내부
+
     fun changePassword(current: String, new: String) {
         viewModelScope.launch {
-            val request = ChangePasswordRequest(current, new)
-            val response = authApi.changePassword(request)
-            if (response.isSuccessful) {
-                _event.emit("SUCCESS") // 화면에 성공 알림
-            } else {
-                _event.emit("FAIL") // 화면에 실패 알림
+            try { // try-catch로 감싸야 앱이 안 죽음!
+                val request = ChangePasswordRequest(current, new)
+                val response = authApi.changePassword(request)
+
+                if (response.isSuccessful) {
+                    _event.emit("SUCCESS")
+                } else {
+                    // 서버가 보내주는 에러 메시지(예: "현재 비번이 틀렸습니다")를 보여주면 더 좋음
+                    _event.emit("FAIL: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                _event.emit("오류: ${e.message}")
             }
         }
     }

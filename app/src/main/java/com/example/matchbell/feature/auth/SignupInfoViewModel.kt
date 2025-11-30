@@ -19,46 +19,41 @@ class SignupInfoViewModel @Inject constructor(
     private val _event = MutableSharedFlow<String>()
     val event = _event.asSharedFlow()
 
-    // 최종 회원가입 진행 함수 (순서: 가입 -> 토큰저장 -> 사진업로드)
     fun signup(signupData: SignupRequest, imageFile: MultipartBody.Part?, context: android.content.Context) {
         viewModelScope.launch {
             try {
-                // 1단계: 회원가입 정보(JSON) 전송
+                // 1. 회원가입 (데이터 전송)
                 val response = authApi.signup(signupData)
 
                 if (response.isSuccessful && response.body() != null) {
-                    val authData = response.body()!!
-                    val jwtToken = authData.jwt
+                    val jwtToken = response.body()!!.jwt
 
-                    // 2단계: 받은 토큰(JWT) 저장 (TokenManager 사용)
-                    // (Refresh Token이 없으므로 두 번째 인자는 비워둠)
+                    // 2. 토큰 저장
                     TokenManager.saveTokens(context, jwtToken, "")
 
-                    // 3단계: 프로필 사진이 있다면 업로드 (토큰 필요!)
+                    // 3. [수정됨] 사진이 있다면 업로드 (주소: /me/profile/image)
                     if (imageFile != null) {
                         try {
-                            // 헤더에 "Bearer 토큰" 형태로 넣어서 보냄
+                            // 여기 API가 uploadProfileImage로 바뀌었습니다!
                             val imageResponse = authApi.uploadProfileImage("Bearer $jwtToken", imageFile)
-                            if (!imageResponse.isSuccessful) {
-                                // 사진 업로드 실패해도 가입은 성공했으니 로그만 찍음
+
+                            if (imageResponse.isSuccessful) {
+                                println("사진 업로드 성공: ${imageResponse.body()?.avatarUrl}")
+                            } else {
                                 println("사진 업로드 실패: ${imageResponse.code()}")
                             }
                         } catch (e: Exception) {
-                            println("사진 업로드 오류: ${e.message}")
+                            println("사진 업로드 중 오류: ${e.message}")
                         }
                     }
 
-                    // 모든 과정 완료!
                     _event.emit("SIGNUP_SUCCESS")
 
                 } else {
-                    // 가입 실패 (409: 중복 등)
-                    // 에러 메시지(response.errorBody())를 파싱하면 좋지만 일단 코드로
                     _event.emit("가입 실패: ${response.code()}")
                 }
             } catch (e: Exception) {
-                _event.emit("에러 발생: ${e.message}")
-                e.printStackTrace()
+                _event.emit("에러: ${e.message}")
             }
         }
     }

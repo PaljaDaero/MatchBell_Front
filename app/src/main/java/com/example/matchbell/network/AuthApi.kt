@@ -19,13 +19,26 @@ interface AuthApi {
 
     // 3. [신규] 프로필 사진 별도 업로드 API
     // 회원가입 성공 후, 발급받은 토큰을 헤더에 넣어서 이미지를 따로 전송합니다.
+    // 1. [수정됨] 프로필 사진 업로드 (회원가입 직후 & 프로필 수정 공용)
     @Multipart
     @POST("/me/profile/image")
     suspend fun uploadProfileImage(
-        @Header("Authorization") token: String, // "Bearer {access_token}" 형태
+        @Header("Authorization") token: String, // "Bearer 토큰"
         @Part file: MultipartBody.Part
-    ): Response<Unit>
+    ): Response<UserProfileResponse> // 성공하면 변경된 정보 전체를 줌
 
+    // 2. [수정됨] 내 프로필 정보 수정 (텍스트만)
+    @PATCH("/me/profile")
+    suspend fun updateProfile(
+        @Header("Authorization") token: String,
+        @Body request: ProfileUpdateRequest
+    ): Response<UserProfileResponse> // 성공하면 변경된 정보 전체를 줌
+
+    // 3. [추가] 내 프로필 조회 (마이페이지 들어갈 때)
+    @GET("/me/profile")
+    suspend fun getMyProfile(
+        @Header("Authorization") token: String
+    ): Response<UserProfileResponse>
     // --- 기존 기능 유지 (필요 없으면 삭제하세요) ---
 
     // 4. 이메일 인증번호 요청 API

@@ -1,6 +1,7 @@
 package com.example.matchbell.feature.auth
 
 import android.os.Bundle
+import android.util.Patterns // [추가] 이메일 검사용 도구
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
@@ -32,39 +33,59 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         )
 
         // 뷰 찾기
-        val emailInput = view.findViewById<EditText>(R.id.et_id) // ID는 et_id지만 내용은 이메일
-        val passwordInput = view.findViewById<EditText>(R.id.et_password)
+        val emailInput = view.findViewById<EditText>(R.id.et_email) // ID는 et_id지만 내용은 이메일
+        val passwordInput = view.findViewById<EditText>(R.id.et_pwd)
         val loginButton = view.findViewById<Button>(R.id.btn_login)
         val loadingBar = view.findViewById<ProgressBar>(R.id.progress_bar)
         val signupText = view.findViewById<TextView>(R.id.tv_signup)
-        val findPwText = view.findViewById<TextView>(R.id.tv_find_pw) // 비밀번호 찾기 버튼
+        val findPwText = view.findViewById<TextView>(R.id.tv_find_pw)
 
         // 1. 로그인 버튼 클릭
         loginButton.setOnClickListener {
             val email = emailInput.text.toString().trim()
-            val pw = passwordInput.text.toString().trim()
+            val pwd = passwordInput.text.toString().trim()
 
+            // ⬇️⬇️⬇️ [추가됨] 임시 로그인(백도어) 코드 시작 ⬇️⬇️⬇️
+            if (email == "1@m.com" && pwd == "admin") {
+                Toast.makeText(context, "관리자 모드(테스트) 접속!", Toast.LENGTH_SHORT).show()
+
+                // [중요] 가짜 토큰이라도 저장해야 다른 화면(마이페이지 등)에서 튕기지 않습니다.
+                TokenManager.saveTokens(requireContext(), "fake_admin_token_12345", "")
+
+                // 메인 화면으로 강제 이동
+                findNavController().navigate(R.id.radarFragment)
+                return@setOnClickListener // 여기서 함수 종료 (서버 요청 안 함)
+            }
+            // ⬆️⬆️⬆️ [추가됨] 임시 로그인 코드 끝 ⬆️⬆️⬆️
             // 빈칸 검사
             if (email.isEmpty()) {
                 Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
                 emailInput.requestFocus()
                 return@setOnClickListener
             }
-            if (pw.isEmpty()) {
+
+            // ⭐ [추가] 이메일 형식 검사 ⭐
+            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                Toast.makeText(context, "올바른 이메일 형식이 아닙니다.", Toast.LENGTH_SHORT).show()
+                emailInput.requestFocus()
+                return@setOnClickListener
+            }
+
+            if (pwd.isEmpty()) {
                 Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
                 passwordInput.requestFocus()
                 return@setOnClickListener
             }
 
-            // [실행] ViewModel에게 진짜 로그인 요청!
-            viewModel.onLoginButtonClicked(email, pw)
+            // ViewModel에게 진짜 로그인 요청!
+            viewModel.onLoginButtonClicked(email, pwd)
         }
 
         // 2. 회원가입 버튼 클릭
         signupText.setOnClickListener {
             findNavController().navigate(R.id.action_loginFragment_to_signupTermsFragment)
         }
-
+/*
         // 3. 비밀번호 찾기 버튼 클릭
         findPwText.setOnClickListener {
             try {
@@ -73,8 +94,8 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                 e.printStackTrace()
             }
         }
-
-        // 4. [핵심] 로그인 결과 받기 (AuthResponse 대응 수정)
+*/
+        // 4. 로그인 결과 받기
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.loginEvent.collect { event ->
                 when (event) {
@@ -89,18 +110,14 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                         loginButton.isEnabled = true
                         loginButton.text = "확인"
 
-                        // ⭐⭐⭐ [수정됨] AuthResponse 구조에 맞춰 저장 ⭐⭐⭐
-                        // event.tokens는 이제 AuthResponse 타입입니다.
-                        // accessToken 대신 jwt 필드를 사용하고, 리프레시 토큰은 없으므로 공백 처리합니다.
+                        // 서버가 준 진짜 토큰 저장!
                         TokenManager.saveTokens(
                             requireContext(),
-                            event.tokens.jwt,  // [변경] accessToken -> jwt
-                            ""                 // [변경] refreshToken -> 없음("")
+                            event.tokens.jwt,
+                            ""
                         )
 
                         Toast.makeText(context, "로그인 성공!", Toast.LENGTH_SHORT).show()
-
-                        // 메인 화면으로 이동
                         findNavController().navigate(R.id.radarFragment)
                     }
 
