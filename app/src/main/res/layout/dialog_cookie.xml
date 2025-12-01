@@ -44,7 +44,7 @@
             android:id="@+id/tv_cookie_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="15개"
+            android:text=""
             android:textSize="18sp"
             android:textColor="#FF69B4"
             android:textStyle="bold"

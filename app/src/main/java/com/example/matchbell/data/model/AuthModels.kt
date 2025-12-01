@@ -18,3 +18,12 @@ data class ResetPasswordRequest(
     val userId: String,      // 누구의 비밀번호를 바꿀지
     val newPassword: String  // 새 비밀번호
 )
+
+data class CookieChargeRequest(
+    val amount: Int = 10,
+    val reason: String = "쿠키 충전 (10개)"
+)
+
+data class CookieBalanceResponse(
+    val balance: Int
+)
