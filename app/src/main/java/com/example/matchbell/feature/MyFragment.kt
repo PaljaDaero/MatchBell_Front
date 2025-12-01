@@ -18,6 +18,7 @@ import com.example.matchbell.databinding.FragmentMyBinding
 import com.example.matchbell.network.AuthApi
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 @AndroidEntryPoint // Hilt 사용 시 필수
@@ -61,11 +62,10 @@ class MyFragment : Fragment() {
             findNavController().navigate(R.id.action_my_ranking)
         }
 
-        // 5. 서버 데이터 연동 예시
-        // binding.tvName.text = "김명지"
+        // 5. 서버 데이터 연동 함수
+        loadProfileData()
     }
 
-    // [수정] 잔액을 불러오는 함수 분리
     private fun loadCookieBalance(cookieCountTextView: TextView) {
         // [수정] viewModelScope 대신 Fragment에서 안전하게 사용할 수 있는 lifecycleScope 사용
         viewLifecycleOwner.lifecycleScope.launch {
@@ -87,6 +87,78 @@ class MyFragment : Fragment() {
                 Toast.makeText(requireContext(), "네트워크 오류 발생", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    // [추가] 프로필 정보를 불러와 UI에 바인딩하는 함수
+    private fun loadProfileData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = authApi.getMyProfile()
+
+                if (response.isSuccessful) {
+                    val profile = response.body()
+                    if (profile != null) {
+                        // 닉네임 설정
+                        binding.tvNickname.text = profile.nickname
+
+                        // 나이 계산 및 설정
+                        val age = calculateKoreanAge(profile.birth) // 새 함수 호출
+                        binding.tvAge.text = age.toString()
+
+                        // 직업 설정
+                        binding.tvJob.text = profile.job
+
+                        // 자기소개(Comment) 설정
+                        binding.tvComment.text = profile.intro ?: "작성된 소개가 없습니다."
+
+                        // Personality(Tendency) 설정
+                        binding.tvPersonality.text = profile.tendency
+
+                        // 이름(tvName)은 API에 없으므로 (가정: 닉네임을 대신 사용하거나, 별도 API 필요)
+                        binding.tvName.text = profile.nickname
+
+                    } else {
+                        Toast.makeText(requireContext(), "프로필 데이터가 비어있습니다.", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Log.e("MyFragment", "Failed to load profile: ${response.code()}")
+                    Toast.makeText(requireContext(), "프로필 로드 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    // UI 초기화 또는 에러 상태 표시
+                    clearProfileFields()
+                }
+            } catch (e: Exception) {
+                Log.e("MyFragment", "Network error when loading profile", e)
+                Toast.makeText(requireContext(), "네트워크 오류 발생", Toast.LENGTH_SHORT).show()
+                clearProfileFields()
+            }
+        }
+    }
+
+    private fun calculateKoreanAge(birthDateString: String): Int {
+        return try {
+            // "yyyy-MM-dd"에서 연도(yyyy)만 추출
+            val birthYearString = birthDateString.substring(0, 4)
+            val birthYear = birthYearString.toInt()
+
+            // 현재 연도 가져오기 (Calendar 또는 LocalDate 사용 가능)
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+
+            // 한국식 나이 = 현재 연도 - 출생 연도 + 1
+            currentYear - birthYear + 1
+        } catch (e: Exception) {
+            Log.e("MyFragment", "Error calculating Korean age from date: $birthDateString", e)
+            -1 // 에러 시 -1 반환
+        }
+    }
+
+    // [추가] 필드 초기화 함수
+    private fun clearProfileFields() {
+        binding.tvNickname.text = "로딩 실패"
+        binding.tvAge.text = "--"
+        binding.tvJob.text = "--"
+        binding.tvComment.text = "정보를 불러올 수 없습니다."
+        binding.tvPersonality.text = "--"
+        binding.tvName.text = "--"
     }
 
     // [수정] showCookieDialog 함수 로직 수정

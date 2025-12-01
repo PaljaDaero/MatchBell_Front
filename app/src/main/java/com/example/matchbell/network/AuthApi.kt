@@ -2,17 +2,18 @@ package com.example.matchbell.network // 1. 패키지 이름 수정
 
 // 2. 데이터 모델 import 경로 수정
 import com.example.matchbell.data.model.ChangePasswordRequest
+import com.example.matchbell.data.model.CookieBalanceResponse
+import com.example.matchbell.data.model.CookieChargeRequest
 import com.example.matchbell.data.model.EmailRequest
 import com.example.matchbell.data.model.EmailVerifyRequest
 import com.example.matchbell.data.model.LoginRequest
 import com.example.matchbell.data.model.LoginResponse
+import com.example.matchbell.data.model.ProfileResponse
 import com.example.matchbell.data.model.ResetPasswordRequest
 import com.example.matchbell.data.model.SignupRequest
 import com.example.matchbell.data.model.SignupResponse
 import com.example.matchbell.data.model.VerifyCodeRequest
 import com.example.matchbell.data.model.VerifyResponse
-import com.example.matchbell.data.model.CookieChargeRequest
-import com.example.matchbell.data.model.CookieBalanceResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -66,4 +67,8 @@ interface AuthApi {
     @POST("/cookie/charge")
     suspend fun chargeCookie(@Body request: CookieChargeRequest): Response<CookieBalanceResponse>
 
+    // [추가] 내 프로필 정보 조회 API
+    // GET /users/me (주소는 백엔드에 따라 변경될 수 있음)
+    @GET("/users/me")
+    suspend fun getMyProfile(): Response<ProfileResponse>
 }
