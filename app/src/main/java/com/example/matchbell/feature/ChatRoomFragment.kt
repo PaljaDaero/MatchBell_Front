@@ -1,32 +1,41 @@
 package com.example.matchbell.feature
 
+import android.app.AlertDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
-import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AlertDialog
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.example.matchbell.R
 import com.example.matchbell.databinding.FragmentChatRoomBinding
+import com.example.matchbell.feature.auth.TokenManager
+import com.example.matchbell.network.ChatApi
+import dagger.hilt.android.AndroidEntryPoint
 import de.hdodenhof.circleimageview.CircleImageView
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.UUID
+import java.text.SimpleDateFormat
+import java.util.Locale
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ChatRoomFragment : Fragment() {
+
+    // ChatApi 주입
+    @Inject
+    lateinit var chatApi: ChatApi
 
     private lateinit var rvChatMessages: RecyclerView
     private lateinit var etMessageInput: EditText
-    private lateinit var btnSend: Button
+    private lateinit var btnSend: ImageButton
     private lateinit var tvUserName: TextView
     private lateinit var tvMatchScore: TextView
     private lateinit var ivProfile: CircleImageView
@@ -38,26 +47,26 @@ class ChatRoomFragment : Fragment() {
     private var otherUserName: String? = null
     private var otherProfileUrl: String? = null
 
-    private val myUserId = "current_user_id_123" // 현재 사용자 ID
+    private val myUserId = "current_user_id_123" // 현재 사용자 ID (String 유지)
+
+    // 메시지 데이터 구조 정의 (로컬/Adapter용) - API 응답 및 로직에 맞춤
+    data class Message(
+        val messageId: Long,    // API의 id와 매핑
+        val matchId: Long,      // API의 matchId와 매핑
+        val senderId: String,   // 비교를 위해 String 유지
+        val content: String,
+        val timestamp: Long,    // API의 sentAt을 파싱한 Long값
+        var isMine: Boolean     // 내가 보낸 메시지인지 구분
+    )
 
     private var _binding: FragmentChatRoomBinding? = null
     private val binding get() = _binding!!
-
-    // 메시지 데이터 구조 정의 (로컬/Adapter용)
-    data class Message(
-        val messageId: String = UUID.randomUUID().toString(),
-        val senderId: String,
-        val content: String,
-        val timestamp: Long = System.currentTimeMillis(),
-        var isMine: Boolean // 내가 보낸 메시지인지 구분
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Bundle에서 데이터 추출
         arguments?.let {
             roomId = it.getString("ROOM_ID")
-            // null이 아닐 경우에만 할당, null이면 초기값 "unknown_user" 유지
             otherUserId = it.getString("USER_ID") ?: otherUserId
             otherUserName = it.getString("USER_NAME")
             otherProfileUrl = it.getString("PROFILE_URL")
@@ -67,8 +76,9 @@ class ChatRoomFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_chat_room, container, false)
+    ): View {
+        _binding = FragmentChatRoomBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -80,129 +90,244 @@ class ChatRoomFragment : Fragment() {
         ivProfile = binding.ivProfileChatRoom
         rvChatMessages = binding.rvChatMessages
         etMessageInput = binding.etMessageInput
-        btnSend = binding.btnSend
+        btnSend = binding.btnSend // 전송 버튼
 
-        // 2. 상단바 정보 설정
-        tvUserName.text = otherUserName ?: "상대방"
-        tvMatchScore.text = "나와의 궁합 92점!" // 하드코딩 유지
-        Glide.with(this)
-            .load(otherProfileUrl)
-            .placeholder(R.drawable.bg_profile_image)
-            .error(R.drawable.bg_profile_image)
-            .into(ivProfile)
+        // [추가된 버튼들 참조]
+        val btnHome: ImageButton = binding.btnHome // 홈 버튼
+        val btnReport: ImageButton = binding.btnReport // 차단/신고 버튼
+        val btnMore: ImageButton = binding.btnMore // 더보기 버튼
 
-        // 3. [테스트용] 초기 메시지 기록 로드
-        val initialMessages = mutableListOf(
-            Message(senderId = otherUserId, content = "안녕하세요 ;)", timestamp = System.currentTimeMillis() - 40000, isMine = false),
-            Message(senderId = myUserId, content = "네, 안녕하세요. 오늘 뭐하세요?", timestamp = System.currentTimeMillis() - 30000, isMine = true),
-            Message(senderId = otherUserId, content = "오늘은 집에서 쉬려고요. 당신은요?", timestamp = System.currentTimeMillis() - 20000, isMine = false),
-            Message(senderId = myUserId, content = "저는 오랜만에 친구 만나러 나왔어요.", timestamp = System.currentTimeMillis() - 10000, isMine = true)
-        )
-
-        // 4. Adapter 초기화 및 RecyclerView 설정
-        messageAdapter = MessageAdapter(initialMessages, myUserId)
+        // 2. Adapter 초기화 및 RecyclerView 설정 - [수정됨: 초기 메시지 목록 비우기]
+        messageAdapter = MessageAdapter(mutableListOf(), myUserId)
         rvChatMessages.apply {
             layoutManager = LinearLayoutManager(context).apply {
                 stackFromEnd = true
             }
             adapter = messageAdapter
         }
-        rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
 
-        // 홈 버튼: 네비게이션 스택을 팝함
-        view.findViewById<View>(R.id.iv_home).setOnClickListener {
-            findNavController().popBackStack()
+        // NavigationComponent 뒤로가기 버튼 처리 (기존 로직 유지)
+
+        // 3. [추가] 채팅방 히스토리 로드
+        loadChatHistory()
+
+        // 4. [추가] 채팅방 히스토리 로드
+        loadChatHistory()
+
+        // 5. [추가] STOMP 구독 시작 (Placeholder)
+        setupStompConnection(roomId)
+
+        // 6. 이벤트 리스너 설정: 버튼 기능 구현
+
+        // A. 홈 버튼: fragment_chat_list로 돌아가기
+        btnHome.setOnClickListener {
+            // 채팅 목록 화면으로 돌아가기 (chatListFragment를 스택에서 찾을 때까지 팝)
+            findNavController().popBackStack(R.id.chatListFragment, false)
         }
 
-        // 차단 버튼: dialog를 띄워 버튼 선택하게 함
-        binding.btnReport.setOnClickListener {
+        // B. 차단/신고 버튼: 다이얼로그 띄우고 차단 API 호출
+        btnReport.setOnClickListener {
             showReportDialog()
         }
 
-        // 더보기 버튼: 상세페이지(fragment_profile_detail)로 이동하게 함
-        binding.btnMore.setOnClickListener {
+        // C. 더보기 버튼: fragment_profile_detail로 이동
+        btnMore.setOnClickListener {
+            // nav_graph에 정의된 action_chatRoomFragment_to_profileDetailFragment를 사용
             findNavController().navigate(R.id.action_chatRoomFragment_to_profileDetailFragment)
         }
 
-        // 5. 이벤트 리스너
+        // D. 전송 버튼
         btnSend.setOnClickListener { sendMessage() }
-
-        // 6. 시스템 뒤로가기 버튼 처리: 수동 FragmentManager 대신 findNavController() 사용
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                findNavController().popBackStack()
-            }
-        })
     }
 
-    // WebSocket: 메시지 전송 및 로컬 시뮬레이션
+    // [추가] 채팅방 히스토리 로드 및 UI 업데이트
+    private fun loadChatHistory() {
+        val matchIdLong = roomId?.toLongOrNull()
+        // chatApi.isInitialized 체크는 Hilt 환경에서 자동으로 처리되므로 주석 처리
+        if (matchIdLong == null) {
+            Log.e("ChatRoomFragment", "Invalid matchId: $roomId")
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                // [API 호출]
+                val response = chatApi.getChatHistory(matchIdLong)
+
+                if (response.isSuccessful) {
+                    val history = response.body() ?: emptyList()
+
+                    // 응답 데이터를 로컬 Message 모델로 변환
+                    val messages = history.map { response ->
+                        convertToLocalMessage(response)
+                    }
+
+                    messageAdapter.addMessages(messages)
+                    rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
+                } else {
+                    // 서버 오류 처리
+                    Log.e("ChatRoomFragment", "Failed to load chat history: ${response.code()}")
+                    Toast.makeText(context, "채팅 기록을 불러오는 데 실패했습니다 (${response.code()})", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                // 네트워크 오류 처리
+                Log.e("ChatRoomFragment", "Network error loading chat history", e)
+                Toast.makeText(context, "네트워크 오류로 채팅 기록을 불러올 수 없습니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+
+    // [추가] ChatMessageResponse를 로컬 Message 모델로 변환하는 유틸리티
+    private fun convertToLocalMessage(response: ChatMessageResponse): Message {
+        val timestamp = convertApiDateToTimestamp(response.sentAt)
+        val senderIdString = response.senderId.toString()
+
+        // [수정: Message 클래스에 직접 접근]
+        return Message(
+            messageId = response.id,
+            matchId = response.matchId,
+            senderId = senderIdString,
+            content = response.content,
+            timestamp = timestamp,
+            isMine = senderIdString == myUserId // 내 ID와 비교
+        )
+    }
+
+    // [추가] STOMP 연결 및 구독 로직 PlaceHolder
+    private fun setupStompConnection(roomId: String?) {
+        if (roomId == null) return
+
+        // 1. 토큰 가져오기 (TokenManager 사용)
+        val token = context?.let { TokenManager.getAccessToken(it) } ?: "dummy_jwt"
+
+        // 2. WebSocket 엔드포인트: ws://16.184.9.169:8080/ws/chat?token=<JWT>
+        val wsUrl = "ws://16.184.9.169:8080/ws/chat?token=$token"
+
+        // 3. 구독 Destination: /topic/chat.{matchId}
+        val subscribeTopic = "/topic/chat.$roomId"
+
+        Log.d("ChatRoomFragment", "WS URL: $wsUrl")
+        Log.d("ChatRoomFragment", "Subscribe To: $subscribeTopic")
+
+        // [실제 STOMP 라이브러리 초기화 및 연결 로직 필요]
+        Toast.makeText(requireContext(), "WebSocket 연결 및 $subscribeTopic 구독 시도 중...", Toast.LENGTH_SHORT).show()
+    }
+
+    // [수정] 메시지 전송 로직 (STOMP 전송 형식: /app/chat.send, Body: {matchId, content})
     private fun sendMessage() {
         val content = etMessageInput.text.toString().trim()
-        if (content.isEmpty()) return
+        val matchIdLong = roomId?.toLongOrNull()
+        if (content.isEmpty() || matchIdLong == null) return
 
-        // 1. 내가 보낸 메시지를 UI에 즉시 추가
+        // 1. 내가 보낸 메시지를 UI에 즉시 추가 (임시 ID 사용)
+        // [수정: Message 클래스에 직접 접근]
         val myMessage = Message(
+            messageId = System.currentTimeMillis() / 100, // 임시 ID
+            matchId = matchIdLong,
             senderId = myUserId,
             content = content,
+            timestamp = System.currentTimeMillis(),
             isMine = true
         )
         messageAdapter.addMessage(myMessage)
         etMessageInput.text.clear()
         rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
 
-        // 2. [테스트용] 상대방이 메시지를 받았고 응답하는 것을 시뮬레이션 (딜레이 후 실행)
-        lifecycleScope.launch {
-            delay(1500) // 1.5초 딜레이
-
-            val autoReply = when {
-                content.contains("안녕") -> "안녕하세요! ${otherUserName ?: "상대방"}입니다."
-                content.contains("오늘") -> "오늘은 좀 바쁘네요. 내일은 시간 괜찮아요?"
-                else -> "네, 알겠습니다! 좋은 하루 보내세요."
-            }
-
-            val receivedMessage = Message(
-                senderId = otherUserId,
-                content = autoReply,
-                isMine = false
-            )
-
-            // 메인 스레드에서 UI 업데이트
-            messageAdapter.addMessage(receivedMessage)
-            rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
-        }
+        /// 2. [추가] 실제 WebSocket 전송 로직
+        val sendRequest = ChatMessageSendRequest( // 클래스를 찾을 수 없던 오류 해결
+            matchId = matchIdLong,
+            content = content
+        )
+        // [STOMP 전송 로직: Gson().toJson(sendRequest)]
+        Log.d("ChatRoomFragment", "STOMP Send: /app/chat.send, Body: $sendRequest")
     }
 
+    // [추가] 차단 다이얼로그 표시 및 API 호출 로직
     private fun showReportDialog() {
-        // 1. AlertDialog Builder 생성
         val builder = AlertDialog.Builder(requireContext())
-
-        // 2. Custom Layout 인플레이트 (R.layout.dialog_ranking 사용)
+        // dialog_report.xml 레이아웃 사용
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_report, null)
         builder.setView(dialogView)
-
-        // 3. Dialog 생성
         val dialog = builder.create()
-
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
-        // 4. 다이얼로그 내 버튼 클릭 리스너 설정
-        val chargeButton = dialogView.findViewById<Button>(R.id.btn_dialog_report)
-        val closeButton = dialogView.findViewById<Button>(R.id.btn_dialog_close)
+        val reportButton = dialogView.findViewById<android.widget.Button>(R.id.btn_dialog_report)
+        val closeButton = dialogView.findViewById<android.widget.Button>(R.id.btn_dialog_close)
 
-        // 차단 버튼 로직
-        chargeButton.setOnClickListener {
+        // 차단하기 버튼 로직: API 호출 및 네비게이션
+        reportButton.setOnClickListener {
+            dialog.dismiss()
+            blockAndNavigateHome() // 차단 로직 실행
         }
 
         // 닫기 버튼 로직
         closeButton.setOnClickListener {
-            dialog.dismiss() // 다이얼로그 닫기
+            dialog.dismiss()
         }
 
-        // 5. 다이얼로그 표시
         dialog.show()
     }
+
+    // [추가] 차단 API 호출 및 채팅 목록으로 복귀 로직
+    private fun blockAndNavigateHome() {
+        val matchIdLong = roomId?.toLongOrNull()
+        if (matchIdLong == null) {
+            Toast.makeText(context, "오류: 채팅방 정보가 유효하지 않습니다.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // API 호출
+        lifecycleScope.launch {
+            try {
+                // POST /me/chats/{matchId}/block
+                val response = chatApi.blockChatRoom(matchIdLong)
+
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "${otherUserName ?: "상대방"}님과의 채팅방이 차단되었습니다.", Toast.LENGTH_LONG).show()
+
+                    // 성공적으로 차단되면 채팅 목록 화면으로 이동
+                    findNavController().popBackStack(R.id.chatListFragment, false)
+                } else {
+                    Log.e("ChatRoomFragment", "Block API failed: ${response.code()}")
+                    Toast.makeText(context, "차단 실패: 서버 오류 (${response.code()})", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Log.e("ChatRoomFragment", "Block API network error", e)
+                Toast.makeText(context, "네트워크 오류로 차단에 실패했습니다.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    // [수정] WebSocket으로부터 메시지를 수신했을 때 호출될 함수
+    fun handleReceivedMessage(wsMessage: ChatMessageResponse) {
+        val message = convertToLocalMessage(wsMessage)
+
+        // UI 업데이트는 메인 스레드에서 실행
+        requireActivity().runOnUiThread {
+            messageAdapter.addMessage(message)
+            rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
+        }
+    }
+
+    // [유지] API의 날짜 문자열을 Kotlin/Java timestamp (Long)으로 변환
+    private fun convertApiDateToTimestamp(apiDate: String): Long {
+        // "yyyy-MM-dd'T'HH:mm:ss" 형식 파싱
+        return try {
+            // SimpleDateFormat은 스레드 안전하지 않으므로, Java 8+ API를 사용하거나 스레드 로컬을 쓰는 것이 좋으나,
+            // 간단한 예제에서는 이대로 사용합니다.
+            val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+            format.parse(apiDate)?.time ?: System.currentTimeMillis()
+        } catch (e: Exception) {
+            Log.e("ChatRoomFragment", "Date parsing error: $apiDate", e)
+            System.currentTimeMillis()
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
-        // WebSocket 관련 정리 코드 제거
+        // [추가] STOMP 연결 해제 로직 필요
+        // disconnectStompClient()
+        _binding = null
     }
 }
