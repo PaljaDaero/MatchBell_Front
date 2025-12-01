@@ -12,6 +12,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.matchbell.R
+import com.example.matchbell.feature.ChatRoomData
+import com.example.matchbell.feature.toChatRoomData
 import com.example.matchbell.network.ChatApi // ChatApi import
 import dagger.hilt.android.AndroidEntryPoint // Hilt import
 import kotlinx.coroutines.launch

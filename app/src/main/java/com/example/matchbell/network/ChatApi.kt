@@ -1,7 +1,7 @@
 package com.example.matchbell.network
 
-import com.example.matchbell.feature.chat.ChatMessageResponse
-import com.example.matchbell.feature.chat.ChatRoomListResponse
+import com.example.matchbell.feature.ChatMessageResponse
+import com.example.matchbell.feature.ChatRoomListResponse
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.POST

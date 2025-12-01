@@ -14,6 +14,7 @@ import com.example.matchbell.data.model.SignupRequest
 import com.example.matchbell.data.model.SignupResponse
 import com.example.matchbell.data.model.VerifyCodeRequest
 import com.example.matchbell.data.model.VerifyResponse
+import com.example.matchbell.feature.RadarResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -71,4 +72,7 @@ interface AuthApi {
     // GET /users/me (주소는 백엔드에 따라 변경될 수 있음)
     @GET("/users/me")
     suspend fun getMyProfile(): Response<ProfileResponse>
+
+    @GET("/radar")
+    suspend fun getRadarUsers(): Response<RadarResponse>
 }

@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.matchbell.R
 import com.example.matchbell.databinding.FragmentChatRoomBinding
+import com.example.matchbell.feature.ChatMessageResponse
+import com.example.matchbell.feature.ChatMessageSendRequest
 import com.example.matchbell.feature.auth.TokenManager
 import com.example.matchbell.network.ChatApi
 import dagger.hilt.android.AndroidEntryPoint

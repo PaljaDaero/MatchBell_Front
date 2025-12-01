@@ -1,4 +1,4 @@
-package com.example.matchbell.feature.chat
+package com.example.matchbell.feature
 
 /**
  * 채팅방 목록에 표시될 각 채팅방의 데이터를 담는 모델입니다.
@@ -57,3 +57,32 @@ fun ChatRoomListResponse.toChatRoomData(): ChatRoomData {
         timestamp = this.lastMessageTime // API 시간 문자열을 그대로 전달
     )
 }
+
+// 레이더 응답의 사용자 목록 항목
+data class RadarUserData(
+    val userId: Long,
+    val nickname: String,
+    val gender: String,
+    val age: Int,
+    val distanceMeters: Double,
+    val region: String,
+    val avatarUrl: String?,
+    val originalScore: Double,
+    val finalScore: Double,
+    val stressScore: Double,
+    val tendency0: List<String>,
+    val tendency1: List<String>
+)
+
+// 레이더 전체 응답 구조
+data class RadarResponse(
+    val me: MyLocationData, // me 필드 데이터 모델
+    val users: List<RadarUserData>
+)
+
+// me 필드의 위치 데이터
+data class MyLocationData(
+    val lat: Double,
+    val lng: Double,
+    val region: String
+)
