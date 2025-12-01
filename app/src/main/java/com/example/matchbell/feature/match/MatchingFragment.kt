@@ -1,4 +1,4 @@
-package com.example.matchbell.feature
+package com.example.matchbell.feature.match
 
 import android.os.Bundle
 import android.view.LayoutInflater

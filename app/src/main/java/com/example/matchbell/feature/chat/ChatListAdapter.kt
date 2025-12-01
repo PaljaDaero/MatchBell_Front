@@ -1,4 +1,4 @@
-package com.example.matchbell.feature
+package com.example.matchbell.feature.chat
 
 import android.view.LayoutInflater
 import android.view.View

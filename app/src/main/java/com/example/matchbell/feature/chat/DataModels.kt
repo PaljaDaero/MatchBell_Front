@@ -1,4 +1,4 @@
-package com.example.matchbell.feature
+package com.example.matchbell.feature.chat
 
 /**
  * 채팅방 목록에 표시될 각 채팅방의 데이터를 담는 모델입니다.

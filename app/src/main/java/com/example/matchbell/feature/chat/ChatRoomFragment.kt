@@ -1,4 +1,4 @@
-package com.example.matchbell.feature
+package com.example.matchbell.feature.chat
 
 import android.app.AlertDialog
 import android.os.Bundle
@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
@@ -252,8 +253,8 @@ class ChatRoomFragment : Fragment() {
         val dialog = builder.create()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
-        val reportButton = dialogView.findViewById<android.widget.Button>(R.id.btn_dialog_report)
-        val closeButton = dialogView.findViewById<android.widget.Button>(R.id.btn_dialog_close)
+        val reportButton = dialogView.findViewById<Button>(R.id.btn_dialog_report)
+        val closeButton = dialogView.findViewById<Button>(R.id.btn_dialog_close)
 
         // 차단하기 버튼 로직: API 호출 및 네비게이션
         reportButton.setOnClickListener {

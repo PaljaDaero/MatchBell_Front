@@ -1,6 +1,5 @@
-package com.example.matchbell.di
+package com.example.matchbell.network
 
-import com.example.matchbell.network.AuthApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

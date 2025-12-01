@@ -1,4 +1,4 @@
-package com.example.matchbell.feature
+package com.example.matchbell.feature.my
 
 import android.os.Bundle
 import android.view.View

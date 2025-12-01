@@ -1,4 +1,4 @@
-package com.example.matchbell.feature
+package com.example.matchbell.feature.chat
 
 import android.os.Bundle
 import android.util.Log // Log import
