@@ -2,6 +2,8 @@ package com.example.matchbell.feature.auth
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -25,9 +27,7 @@ import java.util.Calendar
 @AndroidEntryPoint
 class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
 
-    // ViewModel 연결
     private val viewModel: SignupInfoViewModel by viewModels()
-
     private lateinit var profileImageView: ImageView
     private var selectedImageUri: Uri? = null
 
@@ -44,7 +44,7 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. 이전 화면(회원가입 정보)에서 넘겨준 데이터 받기
+        // 1. 이전 화면 데이터 받기
         val email = arguments?.getString("email") ?: ""
         val password = arguments?.getString("password") ?: ""
 
@@ -72,20 +72,15 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
             val datePickerDialog = DatePickerDialog(
                 requireContext(),
                 { _, y, m, d ->
-                    // 화면에는 "2000년 1월 1일" 형태로 보여줍니다.
+                    // 화면 표시용 (2000년 1월 1일)
                     birthDateTextView.text = "${y}년 ${m + 1}월 ${d}일"
                 },
-                2000, 0, 1 // 기본 선택값
+                2000, 0, 1
             )
 
-            // ⭐⭐⭐ [날짜 제한 설정] 2000.01.01 ~ 2021.12.31 ⭐⭐⭐
-            val minDate = Calendar.getInstance().apply {
-                set(2000, 0, 1)
-            }.timeInMillis
-
-            val maxDate = Calendar.getInstance().apply {
-                set(2021, 11, 31)
-            }.timeInMillis
+            // ⭐ [날짜 제한] 2000.01.01 ~ 2021.12.31 ⭐
+            val minDate = Calendar.getInstance().apply { set(2000, 0, 1) }.timeInMillis
+            val maxDate = Calendar.getInstance().apply { set(2021, 11, 31) }.timeInMillis
 
             datePickerDialog.datePicker.minDate = minDate
             datePickerDialog.datePicker.maxDate = maxDate
@@ -106,69 +101,64 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
             val bio = bioInput.text.toString().trim()
             val job = jobInput.text.toString().trim()
 
-            // 유효성 검사
             if (nickname.isEmpty()) {
                 Toast.makeText(context, "닉네임을 입력해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // ⭐⭐⭐ [수정됨] 날짜 형식 변환 (yyyy-MM-dd) ⭐⭐⭐
-            // "2000년 1월 1일" -> "2000-01-01" (0 채우기 포함)
-            val birthRaw = birthDateTextView.text.toString() // "2000년 1월 1일"
-
-            // 숫자만 뽑아내기
+            // ⭐ [날짜 변환] "2000년 1월 1일" -> "2000-01-01" (0 채우기) ⭐
+            val birthRaw = birthDateTextView.text.toString()
             val dateParts = birthRaw.split(Regex("[^0-9]")).filter { it.isNotEmpty() }
 
-            // 연, 월, 일 분리 후 0 채우기 (padStart)
+            if (dateParts.size < 3) {
+                // 혹시 날짜 선택 안 했을 경우 대비
+                Toast.makeText(context, "생년월일을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             val year = dateParts[0]
             val month = dateParts[1].padStart(2, '0') // 1 -> 01
             val day = dateParts[2].padStart(2, '0')   // 1 -> 01
+            val birthday = "$year-$month-$day"
 
-            val birthday = "$year-$month-$day" // 최종: "2000-01-01"
-
-            // 성별 가져오기
+            // 성별
             val gender = if (rgGender.checkedRadioButtonId == R.id.rb_male) "MALE" else "FEMALE"
 
-            // --- 데이터 준비 ---
-
-            // 1) 회원가입 요청 객체 생성
+            // 1) 데이터 객체 생성
             val requestData = SignupRequest(
                 email = email,
                 pwd = password,
                 nickname = nickname,
-                birth = birthday, // 수정된 날짜 형식 전송
+                birth = birthday,
                 gender = gender,
                 job = job
             )
 
-            // 2) 이미지 파일 만들기
+            // 2) 이미지 파일 준비 (압축 적용됨)
             var imagePart: MultipartBody.Part? = null
             if (selectedImageUri != null) {
+                // ⭐ 수정된 압축 함수 호출 ⭐
                 val file = uriToFile(selectedImageUri!!)
                 if (file != null) {
-                    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                    val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
                     imagePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
                 }
             }
 
-            // 3) 전송 (ViewModel 호출)
+            // 3) 전송
             viewModel.signup(requestData, imagePart, requireContext())
         }
 
-        // 4. 서버 응답 결과 관찰
+        // 4. 결과 관찰
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.event.collect { event ->
                 if (event == "SIGNUP_SUCCESS") {
                     Toast.makeText(context, "회원가입 완료! 권한 설정으로 이동합니다.", Toast.LENGTH_SHORT).show()
-
-                    // 네비게이션 이동 (안전장치 포함)
                     try {
                         findNavController().navigate(R.id.action_profileSetupFragment_to_permissionFragment)
                     } catch (e: Exception) {
-                        Toast.makeText(context, "경로를 다시 확인해주세요. (NavGraph 오류)", Toast.LENGTH_LONG).show()
-                        e.printStackTrace()
+                        Toast.makeText(context, "경로 오류: NavGraph를 확인해주세요.", Toast.LENGTH_LONG).show()
                     }
-
                 } else {
                     Toast.makeText(context, event, Toast.LENGTH_SHORT).show()
                 }
@@ -176,19 +166,47 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
         }
     }
 
-    // [유틸 함수] Uri -> File 변환
+    // ⭐⭐⭐ [수정됨] 이미지 압축 및 리사이징 함수 ⭐⭐⭐
     private fun uriToFile(uri: Uri): File? {
-        return try {
-            val inputStream = requireContext().contentResolver.openInputStream(uri) ?: return null
-            val file = File(requireContext().cacheDir, "temp_profile.jpg")
-            val outputStream = FileOutputStream(file)
-            inputStream.copyTo(outputStream)
+        try {
+            val context = requireContext()
+            val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+
+            // 1. 비트맵으로 디코딩
+            val originalBitmap = BitmapFactory.decodeStream(inputStream)
             inputStream.close()
+
+            // 2. 크기 줄이기 (최대 1024px)
+            val scaledBitmap = resizeBitmap(originalBitmap, 1024)
+
+            // 3. 파일 생성 및 압축 저장 (JPEG 80%)
+            val file = File(context.cacheDir, "compressed_profile.jpg")
+            val outputStream = FileOutputStream(file)
+
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+
+            outputStream.flush()
             outputStream.close()
-            file
+
+            return file
         } catch (e: Exception) {
             e.printStackTrace()
-            null
+            return null
         }
+    }
+
+    // [추가됨] 비율 유지 리사이징 헬퍼 함수
+    private fun resizeBitmap(bitmap: Bitmap, maxSize: Int): Bitmap {
+        var width = bitmap.width
+        var height = bitmap.height
+        val bitmapRatio = width.toFloat() / height.toFloat()
+        if (bitmapRatio > 1) {
+            width = maxSize
+            height = (width / bitmapRatio).toInt()
+        } else {
+            height = maxSize
+            width = (height * bitmapRatio).toInt()
+        }
+        return Bitmap.createScaledBitmap(bitmap, width, height, true)
     }
 }

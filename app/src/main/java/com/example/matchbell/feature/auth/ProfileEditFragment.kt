@@ -29,7 +29,7 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
     private val viewModel: ProfileViewModel by viewModels()
     private var selectedImageUri: Uri? = null
 
-    // [추가] 기존 지역 정보를 저장할 변수 (기본값: 서울)
+    // 기존 지역 정보 저장 (기본값: 서울)
     private var currentRegion: String = "서울"
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -42,7 +42,6 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. 뷰 찾기
         val btnBack = view.findViewById<ImageView>(R.id.btn_back)
         val ivProfile = view.findViewById<ImageView>(R.id.iv_profile_image)
         val etNickname = view.findViewById<EditText>(R.id.et_nickname)
@@ -50,7 +49,7 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
         val etBio = view.findViewById<EditText>(R.id.et_bio)
         val btnConfirm = view.findViewById<Button>(R.id.btn_confirm)
 
-        // 2. 기존 정보 불러오기 (자동 채우기)
+        // 1. 기존 정보 불러오기
         viewModel.fetchMyProfile(requireContext())
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -58,9 +57,8 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
                 if (user != null) {
                     etNickname.setText(user.nickname)
                     etJob.setText(user.job)
-                    etBio.setText(user.intro) // user.intro로 바뀐 것 확인!
+                    etBio.setText(user.intro)
 
-                    // [추가] 서버에서 받은 지역 정보를 기억해둠
                     if (!user.region.isNullOrEmpty()) {
                         currentRegion = user.region
                     }
@@ -72,13 +70,13 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
             }
         }
 
-        // 3. 사진 변경
+        // 2. 사진 변경
         ivProfile.setOnClickListener { pickImageLauncher.launch("image/*") }
 
-        // 4. 뒤로가기
+        // 3. 뒤로가기
         btnBack.setOnClickListener { findNavController().popBackStack() }
 
-        // 5. 확인(수정) 버튼
+        // 4. 확인(수정) 버튼
         btnConfirm.setOnClickListener {
             val nickname = etNickname.text.toString().trim()
             val job = etJob.text.toString().trim()
@@ -89,30 +87,26 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
                 return@setOnClickListener
             }
 
-            // 수정 데이터 객체 생성
-            // [수정] intro로 이름 맞추고, region은 기존 값 유지
             val updateData = ProfileUpdateRequest(
                 nickname = nickname,
                 job = job,
-                intro = bio,        // 백엔드 명세: intro
-                region = currentRegion // 백엔드 명세: region (기존 값 유지)
+                intro = bio,
+                region = currentRegion
             )
 
-            // 이미지 파일 준비
             var imagePart: MultipartBody.Part? = null
             if (selectedImageUri != null) {
                 val file = uriToFile(selectedImageUri!!)
                 if (file != null) {
-                    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                    val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
                     imagePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
                 }
             }
 
-            // 서버 전송
             viewModel.updateProfile(requireContext(), updateData, imagePart)
         }
 
-        // 6. 결과 처리
+        // 5. 결과 처리
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.event.collect { event ->
                 if (event == "UPDATE_SUCCESS") {
@@ -125,16 +119,45 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
         }
     }
 
-    // 유틸 함수
+    // ⭐⭐⭐ [수정됨] 이미지 압축 및 리사이징 함수 ⭐⭐⭐
     private fun uriToFile(uri: Uri): File? {
-        return try {
-            val stream = requireContext().contentResolver.openInputStream(uri) ?: return null
-            val file = File(requireContext().cacheDir, "temp_edit.jpg")
-            val output = FileOutputStream(file)
-            stream.copyTo(output)
-            stream.close()
-            output.close()
-            file
-        } catch (e: Exception) { null }
+        try {
+            val context = requireContext()
+            val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+            val originalBitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+            inputStream.close()
+
+            // 크기 줄이기 (1024px)
+            val scaledBitmap = resizeBitmap(originalBitmap, 1024)
+
+            val file = File(context.cacheDir, "compressed_edit_profile.jpg")
+            val outputStream = FileOutputStream(file)
+
+            // 압축 (JPEG, 80%)
+            scaledBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, outputStream)
+
+            outputStream.flush()
+            outputStream.close()
+
+            return file
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
+    }
+
+    // [추가] 리사이징 헬퍼 함수
+    private fun resizeBitmap(bitmap: android.graphics.Bitmap, maxSize: Int): android.graphics.Bitmap {
+        var width = bitmap.width
+        var height = bitmap.height
+        val bitmapRatio = width.toFloat() / height.toFloat()
+        if (bitmapRatio > 1) {
+            width = maxSize
+            height = (width / bitmapRatio).toInt()
+        } else {
+            height = maxSize
+            width = (height * bitmapRatio).toInt()
+        }
+        return android.graphics.Bitmap.createScaledBitmap(bitmap, width, height, true)
     }
 }
