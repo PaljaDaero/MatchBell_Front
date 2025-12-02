@@ -1,23 +1,24 @@
 package com.example.matchbell.feature.chat
 
 import android.os.Bundle
-import android.util.Log // Log import
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope // lifecycleScope import
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.matchbell.R
 import com.example.matchbell.feature.ChatRoomData
+import com.example.matchbell.feature.auth.TokenManager
 import com.example.matchbell.feature.toChatRoomData
-import com.example.matchbell.network.ChatApi // ChatApi import
-import dagger.hilt.android.AndroidEntryPoint // Hilt import
+import com.example.matchbell.network.ChatApi
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import javax.inject.Inject // Inject import
+import javax.inject.Inject
 
 // [Hilt 사용을 위해 추가]
 @AndroidEntryPoint
@@ -40,39 +41,44 @@ class ChatListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. RecyclerView 참조
+        // 1. RecyclerView 설정
         rvChatList = view.findViewById(R.id.rv_chat_list)
         rvChatList.layoutManager = LinearLayoutManager(context)
 
-        // 초기 어댑터 설정 (로딩 중 상태 또는 빈 목록을 표시)
-        chatListAdapter = ChatListAdapter(emptyList()) { /* 클릭 이벤트는 loadChatRooms에서 설정 */ }
-        rvChatList.adapter = chatListAdapter
-
-        // 2. [수정] API 호출로 데이터 로드
+        // 2. 데이터 로드 시작
         loadChatRooms()
     }
 
-    // [추가] 채팅방 목록 API를 호출하고 데이터를 처리하는 함수
+    // [수정] 채팅방 목록을 API에서 불러오는 함수 (토큰 적용)
     private fun loadChatRooms() {
+        // [추가] TokenManager를 통해 토큰을 가져와 유효성 검사
+        val token = context?.let { TokenManager.getAccessToken(it) }
+
+        if (token.isNullOrEmpty()) {
+            Toast.makeText(context, "로그인 정보가 없어 채팅 목록을 불러올 수 없습니다.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         lifecycleScope.launch {
             try {
-                val response = chatApi.getChatRooms()
+                // [수정] API 호출 시 "Bearer $token" 문자열을 인자로 전달
+                val response = chatApi.getChatRooms("Bearer $token")
 
-                if (response.isSuccessful) {
-                    val apiRooms = response.body() ?: emptyList()
-
-                    // API 응답 모델을 ChatRoomData로 변환
-                    val chatRoomsData = apiRooms.map { it.toChatRoomData() }
-
-                    // 어댑터에 데이터 설정 및 클릭 리스너 재설정
+                if (response.isSuccessful && response.body() != null) {
+                    val chatRoomListResponse = response.body()!!
+                    // List<ChatRoomListResponse> -> List<ChatRoomData>로 변환
+                    val chatRoomsData = chatRoomListResponse.map { it.toChatRoomData() }
                     setupAdapter(chatRoomsData)
+
                 } else {
+                    val context = context ?: return@launch
                     Log.e("ChatListFragment", "Failed to load chat list: ${response.code()}")
                     Toast.makeText(context, "채팅방 목록을 불러오는 데 실패했습니다 (${response.code()})", Toast.LENGTH_LONG).show()
                     // 실패 시 빈 목록 설정
                     setupAdapter(emptyList())
                 }
             } catch (e: Exception) {
+                val context = context ?: return@launch
                 Log.e("ChatListFragment", "Network error when loading chat list", e)
                 Toast.makeText(context, "네트워크 오류로 채팅방 목록을 불러올 수 없습니다.", Toast.LENGTH_LONG).show()
                 // 네트워크 오류 시 빈 목록 설정
@@ -99,5 +105,11 @@ class ChatListFragment : Fragment() {
             findNavController().navigate(R.id.action_chatListFragment_to_chatRoomFragment, bundle)
         }
         rvChatList.adapter = chatListAdapter
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // 메모리 누수 방지를 위해 어댑터 참조를 제거할 수 있습니다 (필요 시)
+        // rvChatList.adapter = null
     }
 }

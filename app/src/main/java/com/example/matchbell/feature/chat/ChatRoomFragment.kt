@@ -20,7 +20,7 @@ import com.example.matchbell.R
 import com.example.matchbell.databinding.FragmentChatRoomBinding
 import com.example.matchbell.feature.ChatMessageResponse
 import com.example.matchbell.feature.ChatMessageSendRequest
-import com.example.matchbell.feature.auth.TokenManager
+import com.example.matchbell.feature.auth.TokenManager // [필수] TokenManager import
 import com.example.matchbell.network.ChatApi
 import dagger.hilt.android.AndroidEntryPoint
 import de.hdodenhof.circleimageview.CircleImageView
@@ -114,13 +114,10 @@ class ChatRoomFragment : Fragment() {
         // 3. [추가] 채팅방 히스토리 로드
         loadChatHistory()
 
-        // 4. [추가] 채팅방 히스토리 로드
-        loadChatHistory()
-
-        // 5. [추가] STOMP 구독 시작 (Placeholder)
+        // 4. [추가] STOMP 구독 시작 (Placeholder)
         setupStompConnection(roomId)
 
-        // 6. 이벤트 리스너 설정: 버튼 기능 구현
+        // 5. 이벤트 리스너 설정: 버튼 기능 구현
 
         // A. 홈 버튼: fragment_chat_list로 돌아가기
         btnHome.setOnClickListener {
@@ -143,19 +140,27 @@ class ChatRoomFragment : Fragment() {
         btnSend.setOnClickListener { sendMessage() }
     }
 
-    // [추가] 채팅방 히스토리 로드 및 UI 업데이트
+    /**
+     * [수정] 채팅방 히스토리 로드 및 UI 업데이트 (토큰 적용)
+     */
     private fun loadChatHistory() {
         val matchIdLong = roomId?.toLongOrNull()
-        // chatApi.isInitialized 체크는 Hilt 환경에서 자동으로 처리되므로 주석 처리
         if (matchIdLong == null) {
             Log.e("ChatRoomFragment", "Invalid matchId: $roomId")
             return
         }
 
+        // [추가] TokenManager를 통해 토큰을 가져와 유효성 검사
+        val token = context?.let { TokenManager.getAccessToken(it) }
+        if (token.isNullOrEmpty()) {
+            Toast.makeText(context, "로그인 정보가 없어 채팅 기록을 불러올 수 없습니다.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         lifecycleScope.launch {
             try {
-                // [API 호출]
-                val response = chatApi.getChatHistory(matchIdLong)
+                // [수정] API 호출 시 "Bearer $token" 문자열을 첫 번째 인자로 전달
+                val response = chatApi.getChatHistory("Bearer $token", matchIdLong)
 
                 if (response.isSuccessful) {
                     val history = response.body() ?: emptyList()
@@ -181,7 +186,7 @@ class ChatRoomFragment : Fragment() {
     }
 
 
-    // [추가] ChatMessageResponse를 로컬 Message 모델로 변환하는 유틸리티
+    // [유지] ChatMessageResponse를 로컬 Message 모델로 변환하는 유틸리티
     private fun convertToLocalMessage(response: ChatMessageResponse): Message {
         val timestamp = convertApiDateToTimestamp(response.sentAt)
         val senderIdString = response.senderId.toString()
@@ -197,15 +202,15 @@ class ChatRoomFragment : Fragment() {
         )
     }
 
-    // [추가] STOMP 연결 및 구독 로직 PlaceHolder
+    // [유지] STOMP 연결 및 구독 로직 PlaceHolder
     private fun setupStompConnection(roomId: String?) {
         if (roomId == null) return
 
         // 1. 토큰 가져오기 (TokenManager 사용)
         val token = context?.let { TokenManager.getAccessToken(it) } ?: "dummy_jwt"
 
-        // 2. WebSocket 엔드포인트: ws://16.184.9.169:8080/ws/chat?token=<JWT>
-        val wsUrl = "ws://16.184.9.169:8080/ws/chat?token=$token"
+        // 2. WebSocket
+        val wsUrl = "ws://3.239.45.21:8080/ws/chat?token=$token"
 
         // 3. 구독 Destination: /topic/chat.{matchId}
         val subscribeTopic = "/topic/chat.$roomId"
@@ -217,7 +222,7 @@ class ChatRoomFragment : Fragment() {
         Toast.makeText(requireContext(), "WebSocket 연결 및 $subscribeTopic 구독 시도 중...", Toast.LENGTH_SHORT).show()
     }
 
-    // [수정] 메시지 전송 로직 (STOMP 전송 형식: /app/chat.send, Body: {matchId, content})
+    // [유지] 메시지 전송 로직
     private fun sendMessage() {
         val content = etMessageInput.text.toString().trim()
         val matchIdLong = roomId?.toLongOrNull()
@@ -246,7 +251,7 @@ class ChatRoomFragment : Fragment() {
         Log.d("ChatRoomFragment", "STOMP Send: /app/chat.send, Body: $sendRequest")
     }
 
-    // [추가] 차단 다이얼로그 표시 및 API 호출 로직
+    // [유지] 차단 다이얼로그 표시 및 API 호출 로직
     private fun showReportDialog() {
         val builder = AlertDialog.Builder(requireContext())
         // dialog_report.xml 레이아웃 사용
@@ -272,7 +277,9 @@ class ChatRoomFragment : Fragment() {
         dialog.show()
     }
 
-    // [추가] 차단 API 호출 및 채팅 목록으로 복귀 로직
+    /**
+     * [수정] 차단 API 호출 및 채팅 목록으로 복귀 로직 (토큰 적용)
+     */
     private fun blockAndNavigateHome() {
         val matchIdLong = roomId?.toLongOrNull()
         if (matchIdLong == null) {
@@ -280,11 +287,18 @@ class ChatRoomFragment : Fragment() {
             return
         }
 
+        // [추가] TokenManager를 통해 토큰을 가져와 유효성 검사
+        val token = context?.let { TokenManager.getAccessToken(it) }
+        if (token.isNullOrEmpty()) {
+            Toast.makeText(context, "로그인 정보가 없어 차단할 수 없습니다.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         // API 호출
         lifecycleScope.launch {
             try {
-                // POST /me/chats/{matchId}/block
-                val response = chatApi.blockChatRoom(matchIdLong)
+                // [수정] API 호출 시 "Bearer $token" 문자열을 첫 번째 인자로 전달
+                val response = chatApi.blockChatRoom("Bearer $token", matchIdLong)
 
                 if (response.isSuccessful) {
                     Toast.makeText(context, "${otherUserName ?: "상대방"}님과의 채팅방이 차단되었습니다.", Toast.LENGTH_LONG).show()
@@ -302,7 +316,7 @@ class ChatRoomFragment : Fragment() {
         }
     }
 
-    // [수정] WebSocket으로부터 메시지를 수신했을 때 호출될 함수
+    // [유지] WebSocket으로부터 메시지를 수신했을 때 호출될 함수
     fun handleReceivedMessage(wsMessage: ChatMessageResponse) {
         val message = convertToLocalMessage(wsMessage)
 
