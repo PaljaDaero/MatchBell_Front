@@ -2,9 +2,8 @@ package com.example.matchbell.network
 
 import com.example.matchbell.data.model.*
 import okhttp3.MultipartBody
-import retrofit2.Response
 import retrofit2.http.*
-// 2. 데이터 모델 import 경로 수정
+
 import com.example.matchbell.data.model.ChangePasswordRequest
 import com.example.matchbell.data.model.CookieBalanceResponse
 import com.example.matchbell.data.model.CookieChargeRequest
@@ -12,11 +11,9 @@ import com.example.matchbell.data.model.EmailRequest
 import com.example.matchbell.data.model.EmailVerifyRequest
 import com.example.matchbell.data.model.LocationRequest
 import com.example.matchbell.data.model.LoginRequest
-import com.example.matchbell.data.model.LoginResponse
 import com.example.matchbell.data.model.ProfileResponse
 import com.example.matchbell.data.model.ResetPasswordRequest
 import com.example.matchbell.data.model.SignupRequest
-import com.example.matchbell.data.model.SignupResponse
 import com.example.matchbell.data.model.VerifyCodeRequest
 import com.example.matchbell.data.model.VerifyResponse
 import com.example.matchbell.feature.RadarResponse
@@ -89,10 +86,6 @@ interface AuthApi {
     // 10. 회원 탈퇴
     @DELETE("auth/withdraw")
     suspend fun withdrawAccount(): Response<Unit>
-
-    // network/AuthApi.kt
-    @POST("auth/password/change") // 주소는 백엔드가 알려줌
-    suspend fun changePassword(@Body request: ChangePasswordRequest): Response<Unit>
 
     // [추가] 쿠키 잔액 조회 API
     // GET /cookie/balance
