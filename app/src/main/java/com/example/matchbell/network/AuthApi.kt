@@ -23,7 +23,7 @@ interface AuthApi {
     // 2. 프로필 / 내 정보 (Profile)
     // ==========================================
 
-    // 내 프로필 조회 (토큰 헤더 포함)
+    // 내 프로필 조회 (토큰 필요)
     @GET("/me/profile")
     suspend fun getMyProfile(
         @Header("Authorization") token: String
@@ -44,7 +44,7 @@ interface AuthApi {
         @Part file: MultipartBody.Part
     ): Response<UserProfileResponse>
 
-    // 회원 탈퇴
+    // 회원 탈퇴 (토큰 필요할 수 있음 -> 필요시 @Header 추가)
     @DELETE("/auth/withdraw")
     suspend fun withdrawAccount(): Response<Unit>
 
@@ -83,15 +83,18 @@ interface AuthApi {
     @POST("/cookie/charge")
     suspend fun chargeCookie(@Body request: CookieChargeRequest): Response<CookieBalanceResponse>
 
+    // [수정됨] 현위치 업데이트 (토큰 헤더 추가)
     @POST("/me/location")
-    suspend fun updateMyLocation(@Body request: LocationRequest): Response<Unit>
+    suspend fun updateMyLocation(
+        @Header("Authorization") token: String, // 👈 토큰 추가됨
+        @Body request: LocationRequest
+    ): Response<Unit>
 
+    // [수정됨] 레이더 유저 조회 (토큰 헤더 추가)
     @GET("/radar")
-    suspend fun getRadarUsers(): Response<RadarResponse>
+    suspend fun getRadarUsers(
+        @Header("Authorization") token: String // 👈 토큰 추가됨
+    ): Response<RadarResponse>
 
-    // [참고] 위쪽에 있는 getMyProfile(token)과 이름이 겹쳐서 에러가 날 수 있습니다.
-    // 만약 이 API가 필요 없다면 삭제하시고, 필요하다면 이름을 getMyProfileSimple() 등으로 바꿔주세요.
-    // 일단은 /api만 제거해두었습니다.
-    @GET("/users/me")
-    suspend fun getMyProfile(): Response<ProfileResponse>
+    // (참고: 중복된 getMyProfile()은 삭제했습니다.)
 }
