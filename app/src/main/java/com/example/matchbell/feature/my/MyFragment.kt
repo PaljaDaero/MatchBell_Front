@@ -141,12 +141,12 @@ class MyFragment : Fragment() {
     }
 
     private fun clearProfileFields() {
-        binding.tvNickname.text = "로딩 실패"
-        binding.tvAge.text = "--"
-        binding.tvJob.text = "--"
-        binding.tvComment.text = "정보를 불러올 수 없습니다."
-        binding.tvPersonality.text = "--"
-        binding.tvName.text = "--"
+        binding.tvNickname.text = ""
+        binding.tvAge.text = ""
+        binding.tvJob.text = ""
+        binding.tvComment.text = ""
+        binding.tvPersonality.text = ""
+        binding.tvName.text = ""
     }
 
     private fun showCookieDialog() {
