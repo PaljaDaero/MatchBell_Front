@@ -1,12 +1,11 @@
 package com.example.matchbell.feature.auth
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -49,7 +48,7 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
         val etBio = view.findViewById<EditText>(R.id.et_bio)
         val btnConfirm = view.findViewById<Button>(R.id.btn_confirm)
 
-        // 1. 기존 정보 불러오기
+        // 1. 기존 정보 불러오기 (자동 채우기)
         viewModel.fetchMyProfile(requireContext())
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -63,9 +62,24 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
                         currentRegion = user.region
                     }
 
+                    // ⬇️⬇️⬇️ [수정됨] 이미지 주소에 서버 주소 붙이기 ⬇️⬇️⬇️
                     if (selectedImageUri == null && !user.avatarUrl.isNullOrEmpty()) {
-                        Glide.with(this@ProfileEditFragment).load(user.avatarUrl).into(ivProfile)
+
+                        // 1. 서버 주소가 없으면 붙여주기
+                        val fullUrl = if (user.avatarUrl.startsWith("http")) {
+                            user.avatarUrl
+                        } else {
+                            "http://3.239.45.21:8080${user.avatarUrl}"
+                        }
+
+                        // 2. Glide로 로딩
+                        Glide.with(this@ProfileEditFragment)
+                            .load(fullUrl)
+                            .placeholder(R.drawable.ic_profile_default)
+                            .error(R.drawable.ic_profile_default)
+                            .into(ivProfile)
                     }
+                    // ⬆️⬆️⬆️ [수정됨] ⬆️⬆️⬆️
                 }
             }
         }
@@ -119,22 +133,20 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
         }
     }
 
-    // ⭐⭐⭐ [수정됨] 이미지 압축 및 리사이징 함수 ⭐⭐⭐
+    // 이미지 압축 및 리사이징 함수
     private fun uriToFile(uri: Uri): File? {
         try {
             val context = requireContext()
             val inputStream = context.contentResolver.openInputStream(uri) ?: return null
-            val originalBitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+            val originalBitmap = BitmapFactory.decodeStream(inputStream)
             inputStream.close()
 
-            // 크기 줄이기 (1024px)
             val scaledBitmap = resizeBitmap(originalBitmap, 1024)
 
             val file = File(context.cacheDir, "compressed_edit_profile.jpg")
             val outputStream = FileOutputStream(file)
 
-            // 압축 (JPEG, 80%)
-            scaledBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, outputStream)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
 
             outputStream.flush()
             outputStream.close()
@@ -146,8 +158,8 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
         }
     }
 
-    // [추가] 리사이징 헬퍼 함수
-    private fun resizeBitmap(bitmap: android.graphics.Bitmap, maxSize: Int): android.graphics.Bitmap {
+    // 리사이징 헬퍼 함수
+    private fun resizeBitmap(bitmap: Bitmap, maxSize: Int): Bitmap {
         var width = bitmap.width
         var height = bitmap.height
         val bitmapRatio = width.toFloat() / height.toFloat()
@@ -158,6 +170,6 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
             height = maxSize
             width = (height * bitmapRatio).toInt()
         }
-        return android.graphics.Bitmap.createScaledBitmap(bitmap, width, height, true)
+        return Bitmap.createScaledBitmap(bitmap, width, height, true)
     }
 }
