@@ -13,7 +13,7 @@ import javax.inject.Singleton
 object NetworkModule {
 
     // [중요] 백엔드 언니가 알려준 서버 주소 (끝에 슬래시 / 필수!)
-    private const val BASE_URL = "http://16.184.9.169:8080/"
+    private const val BASE_URL = "http://3.239.45.21:8080/"
 
     // 1. Retrofit (전화기) 만들기
     @Provides
@@ -30,5 +30,11 @@ object NetworkModule {
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi {
         return retrofit.create(AuthApi::class.java)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideChatApi(retrofit: Retrofit): ChatApi {
+        return retrofit.create(ChatApi::class.java)
     }
 }

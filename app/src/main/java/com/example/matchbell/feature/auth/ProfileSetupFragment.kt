@@ -13,7 +13,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.matchbell.R
 import com.example.matchbell.data.model.SignupRequest
-// [수정] Gson import 제거됨 (더 이상 안 씀)
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -66,18 +65,28 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
             pickImageLauncher.launch("image/*")
         }
 
-        // 생년월일 클릭
+        // 생년월일 클릭 (2000~2021년 제한)
         birthDateTextView.setOnClickListener {
             val calendar = Calendar.getInstance()
+
             val datePickerDialog = DatePickerDialog(
                 requireContext(),
                 { _, y, m, d ->
+                    // 화면에는 "2000년 1월 1일" 형태로 보여줍니다.
                     birthDateTextView.text = "${y}년 ${m + 1}월 ${d}일"
                 },
-                2000, 0, 1
+                2000, 0, 1 // 기본 선택값
             )
-            val minDate = Calendar.getInstance().apply { set(2000, 0, 1) }.timeInMillis
-            val maxDate = Calendar.getInstance().apply { set(2021, 11, 31) }.timeInMillis
+
+            // ⭐⭐⭐ [날짜 제한 설정] 2000.01.01 ~ 2021.12.31 ⭐⭐⭐
+            val minDate = Calendar.getInstance().apply {
+                set(2000, 0, 1)
+            }.timeInMillis
+
+            val maxDate = Calendar.getInstance().apply {
+                set(2021, 11, 31)
+            }.timeInMillis
+
             datePickerDialog.datePicker.minDate = minDate
             datePickerDialog.datePicker.maxDate = maxDate
             datePickerDialog.show()
@@ -91,7 +100,7 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
                 .show()
         }
 
-        // [확인] 버튼 클릭 (수정된 부분)
+        // [확인] 버튼 클릭
         btnFinish.setOnClickListener {
             val nickname = nicknameInput.text.toString().trim()
             val bio = bioInput.text.toString().trim()
@@ -103,40 +112,46 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
                 return@setOnClickListener
             }
 
-            // 날짜 변환 ("2000년 1월 1일" -> "2000-01-01")
-            val birthRaw = birthDateTextView.text.toString()
-            val birthday = birthRaw.replace("년 ", "-").replace("월 ", "-").replace("일", "")
+            // ⭐⭐⭐ [수정됨] 날짜 형식 변환 (yyyy-MM-dd) ⭐⭐⭐
+            // "2000년 1월 1일" -> "2000-01-01" (0 채우기 포함)
+            val birthRaw = birthDateTextView.text.toString() // "2000년 1월 1일"
+
+            // 숫자만 뽑아내기
+            val dateParts = birthRaw.split(Regex("[^0-9]")).filter { it.isNotEmpty() }
+
+            // 연, 월, 일 분리 후 0 채우기 (padStart)
+            val year = dateParts[0]
+            val month = dateParts[1].padStart(2, '0') // 1 -> 01
+            val day = dateParts[2].padStart(2, '0')   // 1 -> 01
+
+            val birthday = "$year-$month-$day" // 최종: "2000-01-01"
 
             // 성별 가져오기
             val gender = if (rgGender.checkedRadioButtonId == R.id.rb_male) "MALE" else "FEMALE"
 
-            // --- [변경] 데이터 준비 (객체 생성 + Multipart) ---
+            // --- 데이터 준비 ---
 
-            // 1) 회원가입 요청 객체 생성 (Gson 변환 없이 객체 그대로 사용)
-            // 주의: SignupRequest 데이터 클래스의 필드명과 순서를 확인하세요.
+            // 1) 회원가입 요청 객체 생성
             val requestData = SignupRequest(
                 email = email,
-                pwd = password,   // 데이터 클래스 변수명 확인 (password vs pwd)
+                pwd = password,
                 nickname = nickname,
-                birth = birthday,
+                birth = birthday, // 수정된 날짜 형식 전송
                 gender = gender,
                 job = job
-                // bio 등 필요한 필드가 더 있다면 추가
             )
 
-            // 2) 이미지 파일 만들기 (MultipartBody.Part)
+            // 2) 이미지 파일 만들기
             var imagePart: MultipartBody.Part? = null
             if (selectedImageUri != null) {
                 val file = uriToFile(selectedImageUri!!)
                 if (file != null) {
                     val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
-                    // "file"은 백엔드가 정한 변수명 (AuthApi 참조)
                     imagePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
                 }
             }
 
             // 3) 전송 (ViewModel 호출)
-            // Context를 넘기는 이유는 ViewModel에서 토큰 저장을 위해 SharedPreferences를 쓰기 위함입니다.
             viewModel.signup(requestData, imagePart, requireContext())
         }
 
@@ -146,13 +161,12 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
                 if (event == "SIGNUP_SUCCESS") {
                     Toast.makeText(context, "회원가입 완료! 권한 설정으로 이동합니다.", Toast.LENGTH_SHORT).show()
 
-                    // ⭐⭐⭐ [수정됨] 네비게이션 예외 처리 (안전장치) ⭐⭐⭐
+                    // 네비게이션 이동 (안전장치 포함)
                     try {
                         findNavController().navigate(R.id.action_profileSetupFragment_to_permissionFragment)
                     } catch (e: Exception) {
-                        // 경로가 잘못되었거나 연결되지 않았을 때 실행됨
                         Toast.makeText(context, "경로를 다시 확인해주세요. (NavGraph 오류)", Toast.LENGTH_LONG).show()
-                        e.printStackTrace() // 로그캣에 자세한 오류 출력
+                        e.printStackTrace()
                     }
 
                 } else {

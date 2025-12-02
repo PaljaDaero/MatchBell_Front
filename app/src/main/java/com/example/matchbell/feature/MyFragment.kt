@@ -1,5 +1,4 @@
-
-package com.example.matchbell.feature.my
+/*package com.example.matchbell.feature.my
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -73,10 +72,6 @@ class MyFragment : Fragment() {
             }
         }
 
-        // 4. 나머지 버튼들 (기존 코드 유지)
-        binding.btnTodayFortune.setOnClickListener {
-            // findNavController().navigate(R.id.action_my_to_fortune)
-        }
 
         binding.btnMyMatching.setOnClickListener {
             // findNavController().navigate(R.id.action_my_to_matching)
@@ -91,4 +86,4 @@ class MyFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
-}
+}*/

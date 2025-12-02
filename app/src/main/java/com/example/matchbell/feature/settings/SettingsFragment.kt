@@ -36,11 +36,11 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         binding.btnVersion.setOnClickListener {
             findNavController().navigate(R.id.action_settingsFragment_to_versionInfoFragment)
         }
-
+        /*
         // [추가] 비밀번호 변경 버튼 클릭
         binding.btnPwChange.setOnClickListener {
             findNavController().navigate(R.id.action_settingsFragment_to_passwordChangeFragment)
-        }
+        }*/
         // 1. 로그아웃 버튼 클릭
         binding.btnLogout.setOnClickListener {
             showDialog("로그아웃", "정말 로그아웃 하시겠습니까?") {
