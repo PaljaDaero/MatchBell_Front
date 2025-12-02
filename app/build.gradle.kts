@@ -64,11 +64,21 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging.interceptor)
 
+    // [추가] Gson 라이브러리 (JSON 변환용)
+    implementation("com.google.code.gson:gson:2.10.1")
+// (혹시 없으면 추가) OkHttp 관련
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+    // (이미 있겠지만 혹시 없다면) OkHttp 관련
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
 
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
+// 버전은 다를 수 있음
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

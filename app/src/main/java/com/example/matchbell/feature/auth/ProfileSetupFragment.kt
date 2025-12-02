@@ -5,25 +5,37 @@ import android.app.DatePickerDialog
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.matchbell.R
+import com.example.matchbell.data.model.SignupRequest
+// [수정] Gson import 제거됨 (더 이상 안 씀)
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import java.io.FileOutputStream
 import java.util.Calendar
 
 @AndroidEntryPoint
 class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
 
-    private lateinit var profileImageView: ImageView
+    // ViewModel 연결
+    private val viewModel: SignupInfoViewModel by viewModels()
 
+    private lateinit var profileImageView: ImageView
+    private var selectedImageUri: Uri? = null
+
+    // 갤러리 런처
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
+            selectedImageUri = uri
             profileImageView.setImageURI(uri)
         } else {
             Toast.makeText(context, "사진 선택이 취소되었습니다.", Toast.LENGTH_SHORT).show()
@@ -33,7 +45,11 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 뷰 찾아오기
+        // 1. 이전 화면(회원가입 정보)에서 넘겨준 데이터 받기
+        val email = arguments?.getString("email") ?: ""
+        val password = arguments?.getString("password") ?: ""
+
+        // 2. 뷰 찾기
         profileImageView = view.findViewById(R.id.iv_profile_image)
         val nicknameInput = view.findViewById<EditText>(R.id.et_nickname)
         val bioInput = view.findViewById<EditText>(R.id.et_bio)
@@ -41,108 +57,124 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
         val regionTextView = view.findViewById<TextView>(R.id.tv_region_value)
         val jobInput = view.findViewById<EditText>(R.id.et_job)
         val btnFinish = view.findViewById<Button>(R.id.btn_finish_signup)
+        val rgGender = view.findViewById<RadioGroup>(R.id.rg_gender)
 
-        // 1. 프로필 사진
+        // 3. 리스너 설정
+
+        // 프로필 사진 클릭
         profileImageView.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
 
-        // 2. 생년월일 (⭐⭐⭐ 2000~2021년 제한 추가됨 ⭐⭐⭐)
+        // 생년월일 클릭
         birthDateTextView.setOnClickListener {
             val calendar = Calendar.getInstance()
-
-            // 기본 선택 위치를 2000년 1월 1일로 설정 (편의성)
-            val defaultYear = 2000
-            val defaultMonth = 0 // 1월
-            val defaultDay = 1
-
             val datePickerDialog = DatePickerDialog(
                 requireContext(),
-                { _, selectedYear, selectedMonth, selectedDay ->
-                    val formattedDate = "${selectedYear}년 ${selectedMonth + 1}월 ${selectedDay}일"
-                    birthDateTextView.text = formattedDate
+                { _, y, m, d ->
+                    birthDateTextView.text = "${y}년 ${m + 1}월 ${d}일"
                 },
-                defaultYear, defaultMonth, defaultDay
+                2000, 0, 1
             )
-
-            // [핵심] 달력 날짜 범위 제한하기
-            val minDate = Calendar.getInstance().apply { set(2000, 0, 1) }.timeInMillis // 2000년 1월 1일
-            val maxDate = Calendar.getInstance().apply { set(2021, 11, 31) }.timeInMillis // 2021년 12월 31일
-
+            val minDate = Calendar.getInstance().apply { set(2000, 0, 1) }.timeInMillis
+            val maxDate = Calendar.getInstance().apply { set(2021, 11, 31) }.timeInMillis
             datePickerDialog.datePicker.minDate = minDate
             datePickerDialog.datePicker.maxDate = maxDate
-
             datePickerDialog.show()
         }
-        /*
-        // 2. 생년월일
-        birthDateTextView.setOnClickListener {
-            val calendar = Calendar.getInstance()
-            val year = calendar.get(Calendar.YEAR)
-            val month = calendar.get(Calendar.MONTH)
-            val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-            val datePickerDialog = DatePickerDialog(
-                requireContext(),
-                { _, selectedYear, selectedMonth, selectedDay ->
-                    val formattedDate = "${selectedYear}년 ${selectedMonth + 1}월 ${selectedDay}일"
-                    birthDateTextView.text = formattedDate
-                },
-                year, month, day
-            )
-            datePickerDialog.show()
-        }
-         */
-
-        // 3. 지역 선택
+        // 지역 선택
         regionTextView.setOnClickListener {
-            val regions = arrayOf(
-                "서울특별시", "경기도", "인천광역시", "강원도", "충청북도", "충청남도",
-                "대전광역시", "경상북도", "경상남도", "대구광역시", "울산광역시", "부산광역시",
-                "전라북도", "전라남도", "광주광역시", "제주특별자치도"
-            )
-
+            val regions = arrayOf("서울특별시", "경기도", "인천광역시", "부산광역시", "대구광역시", "광주광역시", "대전광역시")
             AlertDialog.Builder(requireContext())
-                .setTitle("지역을 선택해주세요")
-                .setItems(regions) { _, which ->
-                    regionTextView.text = regions[which]
-                }
+                .setItems(regions) { _, which -> regionTextView.text = regions[which] }
                 .show()
         }
 
-        // 4. 확인 버튼 (유효성 검사 추가됨!)
+        // [확인] 버튼 클릭 (수정된 부분)
         btnFinish.setOnClickListener {
-            // 입력된 내용 가져오기 (.trim()은 앞뒤 공백 제거)
             val nickname = nicknameInput.text.toString().trim()
             val bio = bioInput.text.toString().trim()
             val job = jobInput.text.toString().trim()
 
-            // [검사 1] 닉네임 입력 확인
+            // 유효성 검사
             if (nickname.isEmpty()) {
                 Toast.makeText(context, "닉네임을 입력해주세요.", Toast.LENGTH_SHORT).show()
-                nicknameInput.requestFocus() // 커서를 닉네임 칸으로 이동
-                return@setOnClickListener // 여기서 함수 종료 (밑으로 안내려감)
-            }
-
-            // [검사 2] 자기소개 입력 확인
-            if (bio.isEmpty()) {
-                Toast.makeText(context, "자기소개를 입력해주세요.", Toast.LENGTH_SHORT).show()
-                bioInput.requestFocus()
                 return@setOnClickListener
             }
 
-            // [검사 3] 직업 입력 확인 (필요 없으면 이 부분 지워도 됨)
-            if (job.isEmpty()) {
-                Toast.makeText(context, "직업을 입력해주세요.", Toast.LENGTH_SHORT).show()
-                jobInput.requestFocus()
-                return@setOnClickListener
+            // 날짜 변환 ("2000년 1월 1일" -> "2000-01-01")
+            val birthRaw = birthDateTextView.text.toString()
+            val birthday = birthRaw.replace("년 ", "-").replace("월 ", "-").replace("일", "")
+
+            // 성별 가져오기
+            val gender = if (rgGender.checkedRadioButtonId == R.id.rb_male) "MALE" else "FEMALE"
+
+            // --- [변경] 데이터 준비 (객체 생성 + Multipart) ---
+
+            // 1) 회원가입 요청 객체 생성 (Gson 변환 없이 객체 그대로 사용)
+            // 주의: SignupRequest 데이터 클래스의 필드명과 순서를 확인하세요.
+            val requestData = SignupRequest(
+                email = email,
+                pwd = password,   // 데이터 클래스 변수명 확인 (password vs pwd)
+                nickname = nickname,
+                birth = birthday,
+                gender = gender,
+                job = job
+                // bio 등 필요한 필드가 더 있다면 추가
+            )
+
+            // 2) 이미지 파일 만들기 (MultipartBody.Part)
+            var imagePart: MultipartBody.Part? = null
+            if (selectedImageUri != null) {
+                val file = uriToFile(selectedImageUri!!)
+                if (file != null) {
+                    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                    // "file"은 백엔드가 정한 변수명 (AuthApi 참조)
+                    imagePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
+                }
             }
 
-            // 위 검사를 모두 통과해야만 여기가 실행됨
-            Toast.makeText(context, "프로필 설정 완료! 환영합니다 ($nickname)님", Toast.LENGTH_SHORT).show()
+            // 3) 전송 (ViewModel 호출)
+            // Context를 넘기는 이유는 ViewModel에서 토큰 저장을 위해 SharedPreferences를 쓰기 위함입니다.
+            viewModel.signup(requestData, imagePart, requireContext())
+        }
 
-            // 아래 코드를 주석 해제하고 사용하세요! (ID가 맞는지 확인 필요)
-            findNavController().navigate(R.id.action_profileSetupFragment_to_permissionFragment)
+        // 4. 서버 응답 결과 관찰
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.event.collect { event ->
+                if (event == "SIGNUP_SUCCESS") {
+                    Toast.makeText(context, "회원가입 완료! 권한 설정으로 이동합니다.", Toast.LENGTH_SHORT).show()
+
+                    // ⭐⭐⭐ [수정됨] 네비게이션 예외 처리 (안전장치) ⭐⭐⭐
+                    try {
+                        findNavController().navigate(R.id.action_profileSetupFragment_to_permissionFragment)
+                    } catch (e: Exception) {
+                        // 경로가 잘못되었거나 연결되지 않았을 때 실행됨
+                        Toast.makeText(context, "경로를 다시 확인해주세요. (NavGraph 오류)", Toast.LENGTH_LONG).show()
+                        e.printStackTrace() // 로그캣에 자세한 오류 출력
+                    }
+
+                } else {
+                    Toast.makeText(context, event, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    // [유틸 함수] Uri -> File 변환
+    private fun uriToFile(uri: Uri): File? {
+        return try {
+            val inputStream = requireContext().contentResolver.openInputStream(uri) ?: return null
+            val file = File(requireContext().cacheDir, "temp_profile.jpg")
+            val outputStream = FileOutputStream(file)
+            inputStream.copyTo(outputStream)
+            inputStream.close()
+            outputStream.close()
+            file
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 }
