@@ -6,6 +6,7 @@ import com.example.matchbell.data.model.CookieBalanceResponse
 import com.example.matchbell.data.model.CookieChargeRequest
 import com.example.matchbell.data.model.EmailRequest
 import com.example.matchbell.data.model.EmailVerifyRequest
+import com.example.matchbell.data.model.LocationRequest
 import com.example.matchbell.data.model.LoginRequest
 import com.example.matchbell.data.model.LoginResponse
 import com.example.matchbell.data.model.ProfileResponse
@@ -75,4 +76,8 @@ interface AuthApi {
 
     @GET("/radar")
     suspend fun getRadarUsers(): Response<RadarResponse>
+
+    // [추가] 현위치 업데이트 API: POST /me/location
+    @POST("/me/location")
+    suspend fun updateMyLocation(@Body request: LocationRequest): Response<Unit>
 }

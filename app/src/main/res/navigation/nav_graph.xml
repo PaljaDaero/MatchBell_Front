@@ -74,7 +74,7 @@
     <!-- 1-1. 상세프로필 -->
     <activity
         android:id="@+id/profileDetailFragment"
-        android:name="com.example.matchbell.feature.my.ProfileActivity"
+        android:name="com.example.matchbell.feature.ProfileActivity"
         android:label="상세 프로필"
         tools:layout="@layout/fragment_profile_detail" />
 
