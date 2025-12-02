@@ -86,3 +86,22 @@ data class MyLocationData(
     val lng: Double,
     val region: String
 )
+
+// [추가] 궁금해요 (보냄/받음) 유저 요약 정보
+data class CuriousUserSummary(
+    val userId: Long,
+    val nickname: String,
+    val avatarUrl: String?,
+    val createdAt: String
+)
+
+// [추가] 매칭된 유저 정보
+data class MatchSummary(
+    val userId: Long,
+    val nickname: String,
+    val avatarUrl: String?,
+    val age: Int,
+    val region: String,
+    val job: String,
+    val matchedAt: String
+)

@@ -1,10 +1,32 @@
 package com.example.matchbell.network
 
-import com.example.matchbell.data.model.*
+import com.example.matchbell.data.model.AuthResponse
+import com.example.matchbell.data.model.ChangePasswordRequest
+import com.example.matchbell.data.model.CookieBalanceResponse
+import com.example.matchbell.data.model.CookieChargeRequest
+import com.example.matchbell.data.model.EmailRequest
+import com.example.matchbell.data.model.EmailVerifyRequest
+import com.example.matchbell.data.model.LocationRequest
+import com.example.matchbell.data.model.LoginRequest
+import com.example.matchbell.data.model.ProfileUpdateRequest
+import com.example.matchbell.data.model.ResetPasswordRequest
+import com.example.matchbell.data.model.SignupRequest
+import com.example.matchbell.data.model.UserProfileResponse
+import com.example.matchbell.data.model.VerifyCodeRequest
+import com.example.matchbell.data.model.VerifyResponse
+import com.example.matchbell.feature.CuriousUserSummary
+import com.example.matchbell.feature.MatchSummary
 import com.example.matchbell.feature.RadarResponse
 import okhttp3.MultipartBody
 import retrofit2.Response
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.Multipart
+import retrofit2.http.PATCH
+import retrofit2.http.POST
+import retrofit2.http.Part
 
 interface AuthApi {
 
@@ -96,5 +118,21 @@ interface AuthApi {
         @Header("Authorization") token: String // 👈 토큰 추가됨
     ): Response<RadarResponse>
 
-    // (참고: 중복된 getMyProfile()은 삭제했습니다.)
+    // [추가] 사용자가 보낸 궁금해요 리스트
+    @GET("/me/curious/sent")
+    suspend fun getSentCurious(
+        @Header("Authorization") token: String
+    ): Response<List<CuriousUserSummary>>
+
+    // [추가] 사용자가 받은 궁금해요 리스트
+    @GET("/me/curious/received")
+    suspend fun getReceivedCurious(
+        @Header("Authorization") token: String
+    ): Response<List<CuriousUserSummary>>
+
+    // [추가] 매칭 리스트 (매칭 완료)
+    @GET("/me/matches")
+    suspend fun getMatches(
+        @Header("Authorization") token: String
+    ): Response<List<MatchSummary>>
 }

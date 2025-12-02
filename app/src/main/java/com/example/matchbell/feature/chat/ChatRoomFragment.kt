@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide // [추가] Glide import
 import com.example.matchbell.R
 import com.example.matchbell.databinding.FragmentChatRoomBinding
 import com.example.matchbell.feature.ChatMessageResponse
@@ -51,6 +52,9 @@ class ChatRoomFragment : Fragment() {
     private var otherProfileUrl: String? = null
 
     private val myUserId = "current_user_id_123" // 현재 사용자 ID (String 유지)
+
+    // [추가] 이미지 로딩을 위한 기본 URL
+    private val BASE_URL = "http://3.239.45.21:8080"
 
     // 메시지 데이터 구조 정의 (로컬/Adapter용) - API 응답 및 로직에 맞춤
     data class Message(
@@ -99,6 +103,26 @@ class ChatRoomFragment : Fragment() {
         val btnHome: ImageButton = binding.btnHome // 홈 버튼
         val btnReport: ImageButton = binding.btnReport // 차단/신고 버튼
         val btnMore: ImageButton = binding.btnMore // 더보기 버튼
+
+        // [추가] 사용자 이름 설정
+        tvUserName.text = otherUserName ?: "알 수 없는 사용자"
+
+        // [추가] 프로필 이미지 로드 (Glide 사용)
+        if (!otherProfileUrl.isNullOrEmpty()) {
+            val fullUrl = if (otherProfileUrl!!.startsWith("http")) {
+                otherProfileUrl
+            } else {
+                "$BASE_URL$otherProfileUrl"
+            }
+
+            Glide.with(this)
+                .load(fullUrl)
+                .placeholder(R.drawable.bg_profile_image) // 로딩 중 표시할 이미지
+                .error(R.drawable.bg_profile_image)       // 에러 시 표시할 이미지
+                .into(ivProfile)
+        } else {
+            ivProfile.setImageResource(R.drawable.bg_profile_image)
+        }
 
         // 2. Adapter 초기화 및 RecyclerView 설정 - [수정됨: 초기 메시지 목록 비우기]
         messageAdapter = MessageAdapter(mutableListOf(), myUserId)
