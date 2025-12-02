@@ -20,15 +20,6 @@ class ChatListAdapter(
     private val onItemClicked: (ChatRoomData) -> Unit
 ) : RecyclerView.Adapter<ChatListAdapter.ChatRoomViewHolder>() {
 
-    // [추가] 목록을 업데이트하고 RecyclerView에 알리는 함수
-    fun updateList(newChatRooms: List<ChatRoomData>) {
-        // [핵심] 기존 목록을 새 목록으로 교체
-        chatRooms = newChatRooms
-        // 변경 사항 전체를 알립니다. (DiffUtil을 사용하면 더 효율적일 수 있습니다.)
-        notifyDataSetChanged()
-    }
-
-    // [추가] API 형식의 시간 문자열("2025-11-29T18:20:15")을 표시 형식으로 변환하는 유틸리티
     private fun formatApiTime(apiTime: String): String {
         return try {
             val apiFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
@@ -44,7 +35,7 @@ class ChatListAdapter(
                 // 오늘 이전: "11/29" 형식
                 SimpleDateFormat("MM/dd", Locale.getDefault()).format(date)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // 오류 시 원본 문자열 반환
             apiTime
         }

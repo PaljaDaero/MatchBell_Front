@@ -125,7 +125,7 @@ class ChatRoomFragment : Fragment() {
         }
 
         // 2. Adapter 초기화 및 RecyclerView 설정 - [수정됨: 초기 메시지 목록 비우기]
-        messageAdapter = MessageAdapter(mutableListOf(), myUserId)
+        messageAdapter = MessageAdapter(mutableListOf())
         rvChatMessages.apply {
             layoutManager = LinearLayoutManager(context).apply {
                 stackFromEnd = true
@@ -165,7 +165,7 @@ class ChatRoomFragment : Fragment() {
     }
 
     /**
-     * [수정] 채팅방 히스토리 로드 및 UI 업데이트 (토큰 적용)
+     *  채팅방 히스토리 로드 및 UI 업데이트 (토큰 적용)
      */
     private fun loadChatHistory() {
         val matchIdLong = roomId?.toLongOrNull()
@@ -302,7 +302,7 @@ class ChatRoomFragment : Fragment() {
     }
 
     /**
-     * [수정] 차단 API 호출 및 채팅 목록으로 복귀 로직 (토큰 적용)
+     * 차단 API 호출 및 채팅 목록으로 복귀 로직 (토큰 적용)
      */
     private fun blockAndNavigateHome() {
         val matchIdLong = roomId?.toLongOrNull()
@@ -337,17 +337,6 @@ class ChatRoomFragment : Fragment() {
                 Log.e("ChatRoomFragment", "Block API network error", e)
                 Toast.makeText(context, "네트워크 오류로 차단에 실패했습니다.", Toast.LENGTH_LONG).show()
             }
-        }
-    }
-
-    // [유지] WebSocket으로부터 메시지를 수신했을 때 호출될 함수
-    fun handleReceivedMessage(wsMessage: ChatMessageResponse) {
-        val message = convertToLocalMessage(wsMessage)
-
-        // UI 업데이트는 메인 스레드에서 실행
-        requireActivity().runOnUiThread {
-            messageAdapter.addMessage(message)
-            rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
         }
     }
 

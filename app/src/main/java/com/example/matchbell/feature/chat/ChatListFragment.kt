@@ -50,13 +50,13 @@ class ChatListFragment : Fragment() {
         loadChatRooms()
     }
 
-    // [수정] 채팅방 목록을 API에서 불러오는 함수 (토큰 적용 및 Context 안전성 강화)
+    // 채팅방 목록을 API에서 불러오는 함수 (토큰 적용 및 Context 안전성 강화)
     private fun loadChatRooms() {
         // [추가] TokenManager를 통해 토큰을 가져와 유효성 검사
         // [수정] context 대신 requireContext()를 사용하여 안정적으로 토큰을 가져옵니다.
         val token = try {
             TokenManager.getAccessToken(requireContext())
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // requireContext() 실패 시 (예: Fragment가 attach 안 된 상태)
             null
         }

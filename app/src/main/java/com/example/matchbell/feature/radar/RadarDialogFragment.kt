@@ -1,55 +1,61 @@
 package com.example.matchbell
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.matchbell.databinding.DialogRadarBinding
+import com.example.matchbell.feature.auth.TokenManager
+import com.example.matchbell.network.AuthApi
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-// 레이더 아이템 클릭 시 표시되는 '궁금해요' 팝업 다이얼로그
+@AndroidEntryPoint
 class RadarDialogFragment : DialogFragment() {
+
+    @Inject
+    lateinit var authApi: AuthApi
 
     private var _binding: DialogRadarBinding? = null
     private val binding get() = _binding!!
 
-    // Bundle Arguments Key
+    // [수정] Long 타입으로 변경
+    private var targetUserId: Long = -1L
+
     companion object {
         const val ARG_USER_ID = "user_id"
         const val ARG_NAME = "name"
         const val ARG_AFFILIATION = "affiliation"
-        const val ARG_SCORE = "score" // [추가] 점수 키 정의
-        const val ARG_ISMUTUAL = "is_mutual" // [추가] 상호 궁금해요 여부 키 정의 (필요 시)
+        const val ARG_SCORE = "score"
 
-        // [수정] score와 isMutual 인자를 받도록 newInstance 함수 시그니처 수정
+        // [수정] id 인자를 Long으로 변경
         fun newInstance(
-            id: Int,
+            id: Long,
             name: String,
             affiliation: String,
             score: Int,
         ): RadarDialogFragment {
             return RadarDialogFragment().apply {
                 arguments = Bundle().apply {
-                    putInt(ARG_USER_ID, id)
+                    putLong(ARG_USER_ID, id) // putLong 사용
                     putString(ARG_NAME, name)
                     putString(ARG_AFFILIATION, affiliation)
-                    putInt(ARG_SCORE, score) // [추가] 점수 저장
+                    putInt(ARG_SCORE, score)
                 }
             }
         }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // 다이얼로그 배경을 투명하게 설정하여 커스텀 레이아웃을 사용
         dialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
         _binding = DialogRadarBinding.inflate(inflater, container, false)
         return binding.root
@@ -64,48 +70,109 @@ class RadarDialogFragment : DialogFragment() {
             return
         }
 
-        val userId = args.getInt(ARG_USER_ID, -1)
+        // [수정] getLong 사용
+        targetUserId = args.getLong(ARG_USER_ID, -1L)
         val name = args.getString(ARG_NAME) ?: "Unknown"
         val affiliation = args.getString(ARG_AFFILIATION) ?: ""
-        val score = args.getInt(ARG_SCORE, 0) // [추가] 점수 로드
+        val score = args.getInt(ARG_SCORE, 0)
 
-        // 1. 데이터 바인딩
-        binding.tvNickname.text = name // 닉네임만 표시
+        Log.d("RadarDialog", "Open Dialog for UserID: $targetUserId") // [로그 확인]
+
+        binding.tvNickname.text = name
         binding.tvAffiliation.text = affiliation
-        binding.tvScore.text = "궁합 ${score}점" // [추가] 궁합 점수 표시
+        binding.tvScore.text = "궁합 ${score}점"
 
-        // 2. 버튼 및 아이콘 리스너 설정
+        // 1. 이미 보낸 요청인지 서버에서 확인
+        checkIfAlreadyLiked()
 
-        // 2-1. 궁금해요 버튼
+        // 2. 궁금해요 버튼 클릭
         binding.btnLike.setOnClickListener {
-            // TODO: 궁금해요 API 호출 로직 추가
-            Toast.makeText(context, "${name}님에게 궁금해요 요청!", Toast.LENGTH_SHORT).show()
-
-            // 버튼 비활성화 시뮬레이션 (한 번 보냈으면 다시 못 보냄)
-            binding.btnLike.isEnabled = false
+            sendLikeRequest(name)
         }
 
-        // 2-2. 닫기 버튼
         binding.btnDialogClose.setOnClickListener {
             dismiss()
         }
 
-        // 2-3. 잠금 아이콘/프로필 클릭 (상세 프로필 잠금 해제 시도)
         binding.flProfile.setOnClickListener {
-            // 창 닫고 상세 프로필 fragment로 이동
             dismiss()
-
-            // [수정] RadarFragment에서 ProfileDetailFragment로 이동하는 Action ID를 사용
-            // 단, DialogFragment는 NavController를 직접 소유하지 않으므로,
-            // parentFragment.findNavController() 대신 findNavController()를 사용하거나,
-            // 안전하게는 parentFragment의 NavController를 사용해야 합니다.
-
-            // DialogFragment는 자신을 띄운 부모 Fragment의 NavController를 사용합니다.
-            parentFragment?.findNavController()?.navigate(R.id.action_radarFragment_to_profileDetailFragment)
-
-            // 또는 Fragment에서 직접 이동하는 Action ID를 사용 (이 경우 nav_graph 구조에 따라 오류 가능성 있음)
-            // findNavController().navigate(R.id.action_radarFragment_to_profileDetailFragment)
+            val bundle = Bundle().apply {
+                putLong("targetUserId", targetUserId)
+            }
+            parentFragment?.findNavController()?.navigate(
+                R.id.action_radarFragment_to_profileDetailFragment,
+                bundle
+            )
         }
+    }
+
+    // 내가 보낸 목록 조회
+    private fun checkIfAlreadyLiked() {
+        val token = context?.let { TokenManager.getAccessToken(it) } ?: return
+
+        lifecycleScope.launch {
+            try {
+                // "내가 보낸 궁금해요 목록" 가져오기
+                val response = authApi.getSentCurious("Bearer $token")
+
+                if (response.isSuccessful) {
+                    val sentList = response.body() ?: emptyList()
+
+                    // [로그] 받아온 목록 확인
+                    Log.d("RadarDialog", "Sent List Size: ${sentList.size}")
+                    sentList.forEach { Log.d("RadarDialog", "Sent ID: ${it.userId}") }
+
+                    // 비교 (Long vs Long)
+                    val isAlreadySent = sentList.any { it.userId == targetUserId }
+
+                    if (isAlreadySent) {
+                        Log.d("RadarDialog", "User $targetUserId is in the list! Disable button.")
+                        disableLikeButton()
+                    } else {
+                        Log.d("RadarDialog", "User $targetUserId not found in list.")
+                    }
+                } else {
+                    Log.e("RadarDialog", "GetSentCurious Failed: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("RadarDialog", "Check error", e)
+            }
+        }
+    }
+
+    // 궁금해요 전송
+    private fun sendLikeRequest(targetName: String) {
+        val token = context?.let { TokenManager.getAccessToken(it) } ?: return
+
+        lifecycleScope.launch {
+            try {
+                val response = authApi.sendLike("Bearer $token", targetUserId)
+
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "${targetName}님에게 궁금해요를 보냈습니다!", Toast.LENGTH_SHORT).show()
+                    disableLikeButton() // 전송 성공 시 즉시 비활성화
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: ""
+                    Log.e("RadarDialog", "SendLike Failed: ${response.code()} / $errorMsg")
+
+                    // 이미 보낸 경우 (409 Conflict 등 서버 응답에 따라 처리)
+                    if (response.code() == 409 || errorMsg.contains("이미")) {
+                        Toast.makeText(context, "이미 요청을 보낸 상대입니다.", Toast.LENGTH_SHORT).show()
+                        disableLikeButton()
+                    } else {
+                        Toast.makeText(context, "전송 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "네트워크 오류", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun disableLikeButton() {
+        binding.btnLike.isEnabled = false
+        binding.btnLike.text = "보냄"
+        binding.btnLike.alpha = 0.5f
     }
 
     override fun onDestroyView() {

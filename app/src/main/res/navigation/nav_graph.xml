@@ -20,9 +20,6 @@
         <action
             android:id="@+id/action_loginFragment_to_signupTermsFragment"
             app:destination="@id/signupTermsFragment" />
-        <action
-            android:id="@+id/action_loginFragment_to_findPasswordFragment"
-            app:destination="@id/findPasswordFragment" />
     </fragment>
 
     <fragment
@@ -63,7 +60,7 @@
     <!-- 1. 궁합레이더 -->
     <fragment
         android:id="@+id/radarFragment"
-        android:name="com.example.matchbell.RadarFragment"
+        android:name="com.example.matchbell.feature.radar.RadarFragment"
         android:label="fragment_radar"
         tools:layout="@layout/fragment_radar" >
         <action
@@ -72,10 +69,10 @@
     </fragment>
 
     <!-- 1-1. 상세프로필 -->
-    <activity
+    <fragment
         android:id="@+id/profileDetailFragment"
-        android:name="com.example.matchbell.feature.ProfileActivity"
-        android:label="상세 프로필"
+        android:name="com.example.matchbell.feature.profile.ProfileDetailFragment"
+        android:label="ProfileDetailFragment"
         tools:layout="@layout/fragment_profile_detail" />
 
 
@@ -154,20 +151,6 @@
     </fragment>
 
     <fragment
-        android:id="@+id/findPasswordFragment"
-        android:name="com.example.matchbell.feature.auth.FindPasswordFragment"
-        android:label="FindPasswordFragment" >
-        <action
-            android:id="@+id/action_findPasswordFragment_to_resetPasswordFragment"
-            app:destination="@id/resetPasswordFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/resetPasswordFragment"
-        android:name="com.example.matchbell.feature.auth.ResetPasswordFragment"
-        android:label="ResetPasswordFragment" />
-
-    <fragment
         android:id="@+id/settingsFragment"
         android:name="com.example.matchbell.feature.settings.SettingsFragment"
         android:label="SettingsFragment"
@@ -175,9 +158,6 @@
         <action
             android:id="@+id/action_settingsFragment_to_profileEditFragment"
             app:destination="@id/profileEditFragment" />
-        <action
-            android:id="@+id/action_settingsFragment_to_passwordChangeFragment"
-            app:destination="@id/passwordChangeFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_notificationSettingsFragment"
             app:destination="@id/notificationSettingsFragment" />
@@ -191,12 +171,6 @@
         android:name="com.example.matchbell.feature.auth.ProfileEditFragment"
         android:label="ProfileEditFragment"
         tools:layout="@layout/fragment_profile_edit" />
-
-    <fragment
-        android:id="@+id/passwordChangeFragment"
-        android:name="com.example.matchbell.feature.auth.PasswordChangeFragment"
-        android:label="PasswordChangeFragment"
-        tools:layout="@layout/fragment_password_change" />
 
     <fragment
         android:id="@+id/notificationSettingsFragment"

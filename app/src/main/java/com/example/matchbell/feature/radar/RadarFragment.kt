@@ -1,8 +1,11 @@
-package com.example.matchbell
+@file:Suppress("DEPRECATION")
+
+package com.example.matchbell.feature.radar
 
 import android.Manifest
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.os.Bundle
@@ -17,6 +20,8 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.matchbell.R
+import com.example.matchbell.RadarDialogFragment
 import com.example.matchbell.databinding.FragmentRadarBinding
 import com.example.matchbell.feature.MatchingScore
 import com.example.matchbell.feature.auth.TokenManager
@@ -58,7 +63,6 @@ class RadarFragment : Fragment() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val LOCATION_PERMISSION_REQUEST_CODE = 1000
-    private val BASE_URL = "http://3.239.45.21:8080"
 
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
@@ -156,8 +160,11 @@ class RadarFragment : Fragment() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        super.onRequestPermissionsResult(/* requestCode = */ requestCode, /* permissions = */
+            permissions, /* grantResults = */
+            grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startLocationUpdates()
@@ -174,7 +181,7 @@ class RadarFragment : Fragment() {
             .build()
         try {
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
-        } catch (e: SecurityException) { }
+        } catch (_: SecurityException) { }
     }
 
     private fun stopLocationUpdates() {
@@ -185,14 +192,18 @@ class RadarFragment : Fragment() {
         val geocoder = Geocoder(requireContext(), Locale.KOREA)
         try {
             val addresses = geocoder.getFromLocation(lat, lng, 1)
-            val region = if (!addresses.isNullOrEmpty()) addresses[0].locality ?: addresses[0].adminArea else "서울"
+            val region = if (!addresses.isNullOrEmpty()) {
+                addresses[0].locality ?: addresses[0].adminArea
+            } else {
+                "서울"
+            }
             val finalRegion = when(region) {
                 "Mountain View" -> "마운틴 뷰"
                 "Seoul" -> "서울"
                 else -> region ?: "서울"
             }
             updateLocationAndLoad(lat, lng, finalRegion)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             updateLocationAndLoad(lat, lng, "서울")
         }
     }
@@ -225,6 +236,7 @@ class RadarFragment : Fragment() {
         }
     }
 
+    @SuppressLint("Recycle")
     private fun addRadarItems(users: List<RadarUser>) {
         if (_binding == null) return
         val container = binding.radarContainer
@@ -276,7 +288,7 @@ class RadarFragment : Fragment() {
             itemView.y = ny - (itemSize/2)
 
             itemView.setOnClickListener {
-                RadarDialogFragment.newInstance(user.id.toInt(), user.name, user.affiliation, user.calculatedScore)
+                RadarDialogFragment.newInstance(user.id, user.name, user.affiliation, user.calculatedScore)
                     .show(parentFragmentManager, "RadarDialog")
             }
             container.addView(itemView)

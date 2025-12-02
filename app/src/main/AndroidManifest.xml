@@ -30,7 +30,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".feature.ProfileActivity" />
+        <activity android:name=".feature.profile.ProfileActivity" />
     </application>
 
 </manifest>

@@ -14,9 +14,14 @@ import com.example.matchbell.data.model.SignupRequest
 import com.example.matchbell.data.model.UserProfileResponse
 import com.example.matchbell.data.model.VerifyCodeRequest
 import com.example.matchbell.data.model.VerifyResponse
+import com.example.matchbell.feature.CookieSpendRequest
 import com.example.matchbell.feature.CuriousUserSummary
+import com.example.matchbell.feature.MatchProfileResponse
 import com.example.matchbell.feature.MatchSummary
+import com.example.matchbell.feature.MyCompatRequest
+import com.example.matchbell.feature.MyCompatResponse
 import com.example.matchbell.feature.RadarResponse
+import com.example.matchbell.feature.RankingListResponse
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -27,6 +32,8 @@ import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface AuthApi {
 
@@ -142,4 +149,44 @@ interface AuthApi {
     suspend fun getMatches(
         @Header("Authorization") token: String
     ): Response<List<MatchSummary>>
+
+    // [추가] 궁금해요(Like) 보내기
+    // 경로 예시: /me/curious/{targetUserId} (백엔드 명세에 따라 수정 필요)
+    @POST("/me/curious/{targetUserId}")
+    suspend fun sendLike(
+        @Header("Authorization") token: String,
+        @Path("targetUserId") targetUserId: Long
+    ): Response<Unit>
+
+    // [추가] 상대방 상세 프로필 조회
+    // 명세에 주신 경로: /me/matches/{targetUserId}/profile
+    @GET("/me/matches/{targetUserId}/profile")
+    suspend fun getMatchProfile(
+        @Header("Authorization") token: String,
+        @Path("targetUserId") targetUserId: Long
+    ): Response<MatchProfileResponse>
+
+    // [추가] 쿠키 사용 (프로필 잠금 해제 등)
+    @POST("/me/cookie/spend")
+    suspend fun spendCookie(
+        @Header("Authorization") token: String,
+        @Body request: CookieSpendRequest
+    ): Response<CookieBalanceResponse>
+
+    // ==========================================
+    // 6. [추가] 나만의 궁합 & 랭킹
+    // ==========================================
+
+    // 나만의 궁합 보기 (결과 반환)
+    @POST("/my-compat")
+    suspend fun postMyCompat(
+        @Header("Authorization") token: String,
+        @Body request: MyCompatRequest
+    ): Response<MyCompatResponse>
+
+    // 궁합 랭킹 조회 (Header 없음)
+    @GET("/compat/ranking")
+    suspend fun getRanking(
+        @Query("limit") limit: Int = 100
+    ): Response<RankingListResponse>
 }

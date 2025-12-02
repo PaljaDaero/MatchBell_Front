@@ -12,8 +12,7 @@ import java.util.Date
 import java.util.Locale
 
 class MessageAdapter(
-    private val messages: MutableList<ChatRoomFragment.Message>,
-    private val myUserId: String
+    private val messages: MutableList<ChatRoomFragment.Message>
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {

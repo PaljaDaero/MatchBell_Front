@@ -1,5 +1,6 @@
 package com.example.matchbell.feature.match
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -39,9 +40,6 @@ class MatchingFragment : Fragment() {
 
     @Inject
     lateinit var authApi: AuthApi
-
-    // [서버 주소] - 이미지 로딩용 (NetworkModule과 동일하게 맞춤)
-    private val BASE_URL = "http://3.239.45.21:8080"
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -138,6 +136,7 @@ class MatchingFragment : Fragment() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun addMatchItems(users: List<MatchUiItem>) {
         val container = binding.llMatchingItemsContainer
         container.removeAllViews() // 기존 뷰 초기화 (새로고침 시 중복 방지)
