@@ -29,7 +29,9 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
     private val viewModel: ProfileViewModel by viewModels()
     private var selectedImageUri: Uri? = null
 
-    // 갤러리 런처
+    // [추가] 기존 지역 정보를 저장할 변수 (기본값: 서울)
+    private var currentRegion: String = "서울"
+
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             selectedImageUri = uri
@@ -56,7 +58,12 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
                 if (user != null) {
                     etNickname.setText(user.nickname)
                     etJob.setText(user.job)
-                    etBio.setText(user.intro)
+                    etBio.setText(user.intro) // user.intro로 바뀐 것 확인!
+
+                    // [추가] 서버에서 받은 지역 정보를 기억해둠
+                    if (!user.region.isNullOrEmpty()) {
+                        currentRegion = user.region
+                    }
 
                     if (selectedImageUri == null && !user.avatarUrl.isNullOrEmpty()) {
                         Glide.with(this@ProfileEditFragment).load(user.avatarUrl).into(ivProfile)
@@ -82,12 +89,13 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
                 return@setOnClickListener
             }
 
-            // 수정 데이터 객체 생성 (지역은 일단 서울로 고정, 필요시 UI 추가)
+            // 수정 데이터 객체 생성
+            // [수정] intro로 이름 맞추고, region은 기존 값 유지
             val updateData = ProfileUpdateRequest(
                 nickname = nickname,
                 job = job,
-                intro = bio,
-                region = "서울"
+                intro = bio,        // 백엔드 명세: intro
+                region = currentRegion // 백엔드 명세: region (기존 값 유지)
             )
 
             // 이미지 파일 준비
@@ -104,12 +112,12 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
             viewModel.updateProfile(requireContext(), updateData, imagePart)
         }
 
-        // 6. 결과 처리 (성공 시 뒤로가기)
+        // 6. 결과 처리
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.event.collect { event ->
                 if (event == "UPDATE_SUCCESS") {
                     Toast.makeText(context, "수정되었습니다!", Toast.LENGTH_SHORT).show()
-                    findNavController().popBackStack() // 마이페이지로 복귀
+                    findNavController().popBackStack()
                 } else {
                     Toast.makeText(context, event, Toast.LENGTH_SHORT).show()
                 }
