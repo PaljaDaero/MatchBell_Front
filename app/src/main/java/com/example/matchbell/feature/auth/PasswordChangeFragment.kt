@@ -8,16 +8,18 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope // [필수] 결과 관찰용
 import androidx.navigation.fragment.findNavController
 import com.example.matchbell.R
-import com.example.matchbell.feature.settings.SettingsViewModel // (주의) 뷰모델 패키지 확인
+import com.example.matchbell.feature.settings.SettingsViewModel // [확인] 뷰모델 패키지명 확인!
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch // [필수] 코루틴
 
 @AndroidEntryPoint
 class PasswordChangeFragment : Fragment(R.layout.fragment_password_change) {
 
-    // [필수] 백엔드와 대화하려면 뷰모델이 필요합니다. (아직 안 만드셨으면 빨간 줄 뜰 수 있음)
-    // private val viewModel: SettingsViewModel by viewModels()
+    // [수정됨] 주석 해제하여 뷰모델 연결
+    private val viewModel: SettingsViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -34,7 +36,7 @@ class PasswordChangeFragment : Fragment(R.layout.fragment_password_change) {
             findNavController().popBackStack()
         }
 
-        // 3. 확인 버튼 클릭 (여기가 핵심!)
+        // 3. 확인 버튼 클릭
         btnConfirm.setOnClickListener {
             val currentPw = etCurrentPw.text.toString().trim()
             val newPw = etNewPw.text.toString().trim()
@@ -58,37 +60,23 @@ class PasswordChangeFragment : Fragment(R.layout.fragment_password_change) {
                 return@setOnClickListener
             }
 
-            // -------------------------------------------------------------------------
-            // [TODO: 백엔드 연결 시 수정할 부분 - 시작]
-            // -------------------------------------------------------------------------
-            // 설명: 지금은 무조건 성공했다고 치고 화면을 닫지만,
-            // 나중에는 "서버야, 비밀번호 바꿔줘"라고 요청하고, "응 바꿨어"라는 대답을 들었을 때만 닫아야 합니다.
-
-            // [현재 코드: 삭제 대상]
-            Toast.makeText(context, "비밀번호가 변경되었습니다. (가짜 성공)", Toast.LENGTH_SHORT).show()
-            findNavController().popBackStack() // 그냥 뒤로가기
-
-
-            // [미래 코드: 이렇게 바꾸세요]
-            /*
-            // 1. 뷰모델에게 요청 (현재비번, 새비번을 줌)
+            // ⭐⭐⭐ [수정됨] 서버로 진짜 변경 요청 보내기 ⭐⭐⭐
+            // (ViewModel에 있는 함수를 호출합니다)
             viewModel.changePassword(currentPw, newPw)
+        }
 
-            // 2. 결과 기다리기 (성공했는지 실패했는지)
-            // (lifecycleScope.launch 같은 코드가 필요할 수 있음)
-            viewModel.passwordChangeEvent.observe(viewLifecycleOwner) { result ->
-                if (result == "SUCCESS") {
-                     Toast.makeText(context, "비밀번호가 변경되었습니다.", Toast.LENGTH_SHORT).show()
-                     findNavController().popBackStack() // 성공했을 때만 뒤로가기!
-                } else {
-                     Toast.makeText(context, "변경 실패: $result", Toast.LENGTH_SHORT).show()
-                     // 실패하면 뒤로가지 않고 그대로 둠 (다시 입력하게)
+        // 4. [추가됨] 서버 응답 기다리기 (성공/실패 처리)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.event.collect { event ->
+                if (event == "SUCCESS") {
+                    // 성공했을 때만 토스트 띄우고 뒤로가기
+                    Toast.makeText(context, "비밀번호가 변경되었습니다.", Toast.LENGTH_SHORT).show()
+                    findNavController().popBackStack()
+                } else if (event.startsWith("FAIL")) {
+                    // 실패 시 (현재 비번 틀림 등) 메시지만 띄우고 화면 유지
+                    Toast.makeText(context, "변경 실패: 현재 비밀번호를 확인해주세요.", Toast.LENGTH_SHORT).show()
                 }
             }
-            */
-            // -------------------------------------------------------------------------
-            // [TODO: 백엔드 연결 시 수정할 부분 - 끝]
-            // -------------------------------------------------------------------------
         }
     }
 

@@ -1,22 +1,30 @@
-package com.example.matchbell.feature
+package com.example.matchbell.feature.my
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import androidx.appcompat.app.AlertDialog
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels // [필수] 뷰모델 사용
+import androidx.lifecycle.lifecycleScope // [필수] 코루틴 사용
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide // [필수] 이미지 로딩
 import com.example.matchbell.R
 import com.example.matchbell.databinding.FragmentMyBinding
+import com.example.matchbell.feature.auth.ProfileViewModel // [필수] 우리가 만든 뷰모델
+import com.example.matchbell.feature.auth.TokenManager
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch // [필수]
 
-@AndroidEntryPoint // Hilt 사용 시 필수
+@AndroidEntryPoint
 class MyFragment : Fragment() {
 
     private var _binding: FragmentMyBinding? = null
     private val binding get() = _binding!!
+
+    // [추가됨] 백엔드와 통신할 뷰모델 연결
+    private val viewModel: ProfileViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -29,59 +37,53 @@ class MyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. 설정 버튼 클릭 (주석 해제 및 연결)
+        // 1. 화면 켜지면 서버에서 내 정보 가져오기
+        viewModel.fetchMyProfile(requireContext())
+
+        // 2. 서버 데이터가 오면 화면에 보여주기 (ViewBinding 사용)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.myProfile.collect { user ->
+                if (user != null) {
+                    // [주의] XML 파일(fragment_my.xml)에 이 ID들이 진짜 있는지 확인하세요!
+                    // 없으면 빨간 줄이 뜰 수 있으니, 실제 ID로 바꿔주셔야 합니다.
+
+                    binding.tvName.text = user.nickname // 닉네임 표시
+                    // binding.tvMbti.text = user.intro // (만약 MBTI나 소개 텍스트뷰가 있다면 주석 해제)
+
+                    // 프로필 사진 로딩
+                    if (!user.avatarUrl.isNullOrEmpty()) {
+                        Glide.with(this@MyFragment)
+                            .load(user.avatarUrl)
+                            .placeholder(R.drawable.ic_profile_default)
+                        // [주의] XML에 이미지뷰 ID가 ivProfile 인지 ivProfileImage 인지 확인!
+                        // .into(binding.ivProfile)
+                    }
+                }
+            }
+        }
+
+        // 3. 설정 버튼(톱니바퀴) 클릭
         binding.ivSettings.setOnClickListener {
-            findNavController().navigate(R.id.action_myFragment_to_settingsFragment)
+            try {
+                // ⬇️ [수정됨] 바로 수정화면으로 가는 게 아니라, '설정 화면'으로 이동!
+                findNavController().navigate(R.id.action_myFragment_to_settingsFragment)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
-        // 2. 쿠키 버튼
-        binding.btnCookie.setOnClickListener {
-            showCookieDialog()
+        // 4. 나머지 버튼들 (기존 코드 유지)
+        binding.btnTodayFortune.setOnClickListener {
+            // findNavController().navigate(R.id.action_my_to_fortune)
         }
 
-        // 3. 나만의 궁합 버튼
         binding.btnMyMatching.setOnClickListener {
-            findNavController().navigate(R.id.action_my_matching)
+            // findNavController().navigate(R.id.action_my_to_matching)
         }
 
-        // 4. 궁합 랭킹 버튼
         binding.btnMyRanking.setOnClickListener {
-            findNavController().navigate(R.id.action_my_ranking)
+            // findNavController().navigate(R.id.action_my_to_ranking)
         }
-
-        // 5. 서버 데이터 연동 예시
-        // binding.tvName.text = "김명지"
-    }
-
-    private fun showCookieDialog() {
-        // 1. AlertDialog Builder 생성
-        val builder = AlertDialog.Builder(requireContext())
-
-        // 2. Custom Layout 인플레이트 (R.layout.dialog_ranking 사용)
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_cookie, null)
-        builder.setView(dialogView)
-
-        // 3. Dialog 생성
-        val dialog = builder.create()
-
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        // 4. 다이얼로그 내 버튼 클릭 리스너 설정
-        val chargeButton = dialogView.findViewById<Button>(R.id.btn_dialog_charge)
-        val closeButton = dialogView.findViewById<Button>(R.id.btn_dialog_close)
-
-        // 쿠키 충전 버튼 로직
-        chargeButton.setOnClickListener {
-            // findNavController().navigate(R.id.action_show_charge_screen)
-        }
-
-        // 닫기 버튼 로직
-        closeButton.setOnClickListener {
-            dialog.dismiss() // 다이얼로그 닫기
-        }
-
-        // 5. 다이얼로그 표시
-        dialog.show()
     }
 
     override fun onDestroyView() {
