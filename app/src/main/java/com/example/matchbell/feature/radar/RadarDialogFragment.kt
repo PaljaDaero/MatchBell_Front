@@ -20,9 +20,10 @@ class RadarDialogFragment : DialogFragment() {
         const val ARG_USER_ID = "user_id"
         const val ARG_NAME = "name"
         const val ARG_AFFILIATION = "affiliation"
-        const val ARG_SCORE = "score"
-        const val ARG_IS_MUTUAL = "is_mutual_curiosity"
+        const val ARG_SCORE = "score" // [추가] 점수 키 정의
+        const val ARG_ISMUTUAL = "is_mutual" // [추가] 상호 궁금해요 여부 키 정의 (필요 시)
 
+        // [수정] score와 isMutual 인자를 받도록 newInstance 함수 시그니처 수정
         fun newInstance(
             id: Int,
             name: String,
@@ -35,8 +36,8 @@ class RadarDialogFragment : DialogFragment() {
                     putInt(ARG_USER_ID, id)
                     putString(ARG_NAME, name)
                     putString(ARG_AFFILIATION, affiliation)
-                    putInt(ARG_SCORE, score)
-                    putBoolean(ARG_IS_MUTUAL, isMutual)
+                    putInt(ARG_SCORE, score) // [추가] 점수 저장
+                    putBoolean(ARG_ISMUTUAL, isMutual) // [추가] 상호 여부 저장
                 }
             }
         }
@@ -50,6 +51,8 @@ class RadarDialogFragment : DialogFragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // 다이얼로그 배경을 투명하게 설정하여 커스텀 레이아웃을 사용
+        dialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
         _binding = DialogRadarBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -63,21 +66,22 @@ class RadarDialogFragment : DialogFragment() {
             return
         }
 
+        val userId = args.getInt(ARG_USER_ID, -1)
         val name = args.getString(ARG_NAME) ?: "Unknown"
         val affiliation = args.getString(ARG_AFFILIATION) ?: ""
-        val score = args.getInt(ARG_SCORE)
-        val isMutual = args.getBoolean(ARG_IS_MUTUAL)
+        val score = args.getInt(ARG_SCORE, 0) // [추가] 점수 로드
 
         // 1. 데이터 바인딩
-        binding.tvNickname.text = "닉네임 : $name"
+        binding.tvNickname.text = name // 닉네임만 표시
         binding.tvAffiliation.text = affiliation
-        binding.tvScore.text = "나와의 궁합 ${score}점!"
+        binding.tvScore.text = "궁합 ${score}점" // [추가] 궁합 점수 표시
 
         // 2. 버튼 및 아이콘 리스너 설정
 
         // 2-1. 궁금해요 버튼
         binding.btnLike.setOnClickListener {
-            Toast.makeText(context, "${name}님이 궁금해요!", Toast.LENGTH_SHORT).show()
+            // TODO: 궁금해요 API 호출 로직 추가
+            Toast.makeText(context, "${name}님에게 궁금해요 요청!", Toast.LENGTH_SHORT).show()
 
             // 버튼 비활성화 시뮬레이션 (한 번 보냈으면 다시 못 보냄)
             binding.btnLike.isEnabled = false
@@ -92,7 +96,17 @@ class RadarDialogFragment : DialogFragment() {
         binding.flProfile.setOnClickListener {
             // 창 닫고 상세 프로필 fragment로 이동
             dismiss()
-            findNavController().navigate(R.id.action_radarFragment_to_profileDetailFragment)
+
+            // [수정] RadarFragment에서 ProfileDetailFragment로 이동하는 Action ID를 사용
+            // 단, DialogFragment는 NavController를 직접 소유하지 않으므로,
+            // parentFragment.findNavController() 대신 findNavController()를 사용하거나,
+            // 안전하게는 parentFragment의 NavController를 사용해야 합니다.
+
+            // DialogFragment는 자신을 띄운 부모 Fragment의 NavController를 사용합니다.
+            parentFragment?.findNavController()?.navigate(R.id.action_radarFragment_to_profileDetailFragment)
+
+            // 또는 Fragment에서 직접 이동하는 Action ID를 사용 (이 경우 nav_graph 구조에 따라 오류 가능성 있음)
+            // findNavController().navigate(R.id.action_radarFragment_to_profileDetailFragment)
         }
     }
 

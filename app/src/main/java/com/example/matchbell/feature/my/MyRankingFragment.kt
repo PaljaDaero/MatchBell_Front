@@ -1,4 +1,4 @@
-package com.example.matchbell.feature
+package com.example.matchbell.feature.my
 
 import android.graphics.Color
 import android.os.Bundle

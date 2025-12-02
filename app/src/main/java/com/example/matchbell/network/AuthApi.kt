@@ -4,6 +4,27 @@ import com.example.matchbell.data.model.*
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.*
+// 2. 데이터 모델 import 경로 수정
+import com.example.matchbell.data.model.ChangePasswordRequest
+import com.example.matchbell.data.model.CookieBalanceResponse
+import com.example.matchbell.data.model.CookieChargeRequest
+import com.example.matchbell.data.model.EmailRequest
+import com.example.matchbell.data.model.EmailVerifyRequest
+import com.example.matchbell.data.model.LocationRequest
+import com.example.matchbell.data.model.LoginRequest
+import com.example.matchbell.data.model.LoginResponse
+import com.example.matchbell.data.model.ProfileResponse
+import com.example.matchbell.data.model.ResetPasswordRequest
+import com.example.matchbell.data.model.SignupRequest
+import com.example.matchbell.data.model.SignupResponse
+import com.example.matchbell.data.model.VerifyCodeRequest
+import com.example.matchbell.data.model.VerifyResponse
+import com.example.matchbell.feature.RadarResponse
+import retrofit2.Response
+import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
+import retrofit2.http.POST
 
 interface AuthApi {
 
@@ -68,4 +89,30 @@ interface AuthApi {
     // 10. 회원 탈퇴
     @DELETE("auth/withdraw")
     suspend fun withdrawAccount(): Response<Unit>
+
+    // network/AuthApi.kt
+    @POST("auth/password/change") // 주소는 백엔드가 알려줌
+    suspend fun changePassword(@Body request: ChangePasswordRequest): Response<Unit>
+
+    // [추가] 쿠키 잔액 조회 API
+    // GET /cookie/balance
+    @GET("/cookie/balance")
+    suspend fun getCookieBalance(): Response<CookieBalanceResponse>
+
+    // [추가] 쿠키 충전 API
+    // POST /cookie/charge
+    @POST("/cookie/charge")
+    suspend fun chargeCookie(@Body request: CookieChargeRequest): Response<CookieBalanceResponse>
+
+    // [추가] 내 프로필 정보 조회 API
+    // GET /users/me (주소는 백엔드에 따라 변경될 수 있음)
+    @GET("/users/me")
+    suspend fun getMyProfile(): Response<ProfileResponse>
+
+    @GET("/radar")
+    suspend fun getRadarUsers(): Response<RadarResponse>
+
+    // [추가] 현위치 업데이트 API: POST /me/location
+    @POST("/me/location")
+    suspend fun updateMyLocation(@Body request: LocationRequest): Response<Unit>
 }

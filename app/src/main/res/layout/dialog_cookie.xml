@@ -44,7 +44,7 @@
             android:id="@+id/tv_cookie_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="15개"
+            android:text=""
             android:textSize="18sp"
             android:textColor="#FF69B4"
             android:textStyle="bold"
@@ -61,7 +61,7 @@
         android:layout_marginTop="30dp"
         android:text="쿠키 충전하기"
         android:textColor="@android:color/white"
-        android:background="@drawable/bt_my"
+        android:backgroundTint="#F3A6B5"
         app:layout_constraintTop_toBottomOf="@id/cl_cookie_group"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -72,10 +72,13 @@
         android:layout_height="50dp"
         android:layout_marginTop="10dp"
         android:text="닫기"
-        android:textColor="@android:color/white"
-        android:background="@drawable/bt_my"
+        android:textColor="#F3A6B5"
+        android:backgroundTint="@android:color/white"
+        app:strokeColor="#F3A6B5"
+        app:strokeWidth="1dp"
         app:layout_constraintTop_toBottomOf="@id/btn_dialog_charge"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.8" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,4 +1,4 @@
-package com.example.matchbell.feature
+package com.example.matchbell.feature.chat
 
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +11,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// MessageAdapter.kt
 class MessageAdapter(
     private val messages: MutableList<ChatRoomFragment.Message>,
     private val myUserId: String

@@ -82,7 +82,7 @@
     <!-- 2. 매칭리스트 -->
     <fragment
         android:id="@+id/matchingFragment"
-        android:name="com.example.matchbell.feature.MatchingFragment"
+        android:name="com.example.matchbell.feature.match.MatchingFragment"
         android:label="fragment_matching"
         tools:layout="@layout/fragment_matching" >
         <action
@@ -94,7 +94,7 @@
     <!-- 3. 채팅리스트 -->
     <fragment
         android:id="@+id/chatListFragment"
-        android:name="com.example.matchbell.feature.ChatListFragment"
+        android:name="com.example.matchbell.feature.chat.ChatListFragment"
         android:label="fragment_chat_list"
         tools:layout="@layout/fragment_chat_list">
         <action
@@ -105,7 +105,7 @@
     <!-- 3-1. 채팅방 -->
     <fragment
         android:id="@+id/chatRoomFragment"
-        android:name="com.example.matchbell.feature.ChatRoomFragment"
+        android:name="com.example.matchbell.feature.chat.ChatRoomFragment"
         android:label="채팅방"
         tools:layout="@layout/fragment_chat_room" >
         <argument
@@ -129,7 +129,7 @@
     <!-- 4. 마이페이지 -->
     <fragment
         android:id="@+id/myFragment"
-        android:name="com.example.matchbell.feature.MyFragment"
+        android:name="com.example.matchbell.feature.my.MyFragment"
         android:label="fragment_my"
         tools:layout="@layout/fragment_my" >
         <action
@@ -213,7 +213,7 @@
     <!-- 4-2. 나만의 궁합 -->
     <fragment
         android:id="@+id/myMatchingFragment"
-        android:name="com.example.matchbell.feature.MyMatchingFragment"
+        android:name="com.example.matchbell.feature.my.MyMatchingFragment"
         android:label="MyMatchingFragment"
         tools:layout="@layout/fragment_my_matching">
         <action
@@ -224,7 +224,7 @@
     <!-- 4-2-1. 나만의 궁합 결과 -->
     <fragment
         android:id="@+id/myMatchingResultFragment"
-        android:name="com.example.matchbell.feature.MyMatchingResultFragment"
+        android:name="com.example.matchbell.feature.my.MyMatchingResultFragment"
         android:label="MyMatchingResultFragment"
         tools:layout="@layout/fragment_my_matching_result" >
         <action
@@ -235,7 +235,7 @@
     <!-- 4-3. 궁합 랭킹 -->
     <fragment
         android:id="@+id/myRankingFragment"
-        android:name="com.example.matchbell.feature.MyRankingFragment"
+        android:name="com.example.matchbell.feature.my.MyRankingFragment"
         android:label="MyRankingFragment"
         tools:layout="@layout/fragment_my_ranking" />
 

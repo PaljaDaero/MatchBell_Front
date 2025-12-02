@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFF0F5"
-    tools:context=".feature.ChatListFragment">
+    tools:context=".feature.chat.ChatListFragment">
 
     <ImageView
         android:id="@+id/message_bar"
