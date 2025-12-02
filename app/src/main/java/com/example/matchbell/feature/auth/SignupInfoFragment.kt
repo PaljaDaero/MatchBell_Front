@@ -41,6 +41,14 @@ class SignupInfoFragment : Fragment(R.layout.fragment_register_info) {
                 Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+            // ⭐⭐⭐ [추가됨] 이메일 형식 검사 (핵심!) ⭐⭐⭐
+            // android.util.Patterns를 이용해 이메일 모양인지 확인합니다.
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                Toast.makeText(context, "올바른 이메일 형식이 아닙니다.", Toast.LENGTH_SHORT).show()
+                emailInput.requestFocus() // 다시 입력하라고 포커스 줌
+                return@setOnClickListener // 여기서 멈춤! (다음 화면 안 넘어감)
+            }
+            // ⭐⭐⭐ [추가 끝] ⭐⭐⭐
 
             if (!isValidPassword(pw)) {
                 Toast.makeText(context, "비밀번호는 영문, 숫자, 특수문자를 포함하여 8자 이상이어야 합니다.", Toast.LENGTH_LONG).show()
