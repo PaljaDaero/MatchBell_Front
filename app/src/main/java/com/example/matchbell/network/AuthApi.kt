@@ -99,12 +99,19 @@ interface AuthApi {
     // 4. 기타 기능 (쿠키, 위치, 레이더)
     // ==========================================
 
-    @GET("/cookie/balance")
-    suspend fun getCookieBalance(): Response<CookieBalanceResponse>
 
-    @POST("/cookie/charge")
-    suspend fun chargeCookie(@Body request: CookieChargeRequest): Response<CookieBalanceResponse>
+    // [수정됨] 쿠키 잔액 조회 (토큰 필요!)
+    @GET("/me/cookie") // /api 붙었는지 확인!
+    suspend fun getCookieBalance(
+        @Header("Authorization") token: String // 👈 이게 꼭 있어야 합니다!
+    ): Response<CookieBalanceResponse>
 
+    // [수정됨] 쿠키 충전 (토큰 필요!)
+    @POST("/me/cookie/earn") // /api 붙었는지 확인!
+    suspend fun chargeCookie(
+        @Header("Authorization") token: String, // 👈 이것도 토큰 필요!
+        @Body request: CookieChargeRequest
+    ): Response<CookieBalanceResponse>
     // [수정됨] 현위치 업데이트 (토큰 헤더 추가)
     @POST("/me/location")
     suspend fun updateMyLocation(
