@@ -1,6 +1,7 @@
 package com.example.matchbell
 
 // [필수 추가] 위치 및 권한 관련 import
+// [추가] 토큰 관리 및 모델 import
 import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -24,6 +25,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.matchbell.databinding.FragmentRadarBinding
 import com.example.matchbell.feature.MatchingScore
+import com.example.matchbell.feature.auth.TokenManager
 import com.example.matchbell.network.AuthApi
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -44,8 +46,6 @@ data class RadarUser(
     val calculatedScore: Int, // MatchingScore를 통해 계산된 최종 점수
     val name: String, // nickname
     val affiliation: String, // region + age (UI 표시용으로 가공)
-    var isLikeSent: Boolean = false,
-    val avatarUrl: String? // 프로필 이미지 로드용
 )
 
 @AndroidEntryPoint
@@ -64,6 +64,11 @@ class RadarFragment : Fragment() {
     // [추가] 1. 위치 클라이언트 및 요청 변수 선언
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val LOCATION_PERMISSION_REQUEST_CODE = 1000
+
+    // [추가] 서버 BASE_URL (NetworkModule에서 가져오거나 직접 정의)
+    // NetworkModule의 BASE_URL이 "http://3.239.45.21:8080/" 이므로, 슬래시 제거 후 사용
+    private val BASE_URL = "http://3.239.45.21:8080"
+
 
     // [추가] 2. 위치 콜백 정의
     private val locationCallback = object : LocationCallback() {
@@ -149,6 +154,7 @@ class RadarFragment : Fragment() {
             .build()
 
         try {
+            // 권한 체크는 acquireLocationAndLoadRadar에서 이미 수행
             fusedLocationClient.requestLocationUpdates(
                 locationRequest,
                 locationCallback,
@@ -164,21 +170,49 @@ class RadarFragment : Fragment() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
-    // [추가] 7. 좌표(Lat/Lng)를 지역명(Region)으로 변환 (Geocoder 사용)
+    /**
+     * [수정] 좌표(Lat/Lng)를 지역명(Region)으로 변환 (Geocoder 사용)
+     * Geocoder에 명시적으로 Locale.KOREA를 전달하여 한국어 주소 우선순위를 높이고,
+     * 영문 지명에 대한 임시 변환 로직을 추가합니다.
+     */
     private fun getRegionFromLocation(lat: Double, lng: Double) {
+        // [수정] Locale.KOREA를 명시적으로 사용하여 한국어 결과 우선
         val geocoder = Geocoder(requireContext(), Locale.KOREA)
         try {
-            // getFromLocation은 네트워크가 필요하며, API 33 미만 호환성을 위해 사용
             val addresses = geocoder.getFromLocation(lat, lng, 1)
             val region = if (!addresses.isNullOrEmpty()) {
-                // Address 객체에서 필요한 지역 정보 (시/군/구) 추출
-                addresses[0].locality ?: addresses[0].adminArea ?: "위치 미확인"
+                val address = addresses[0]
+
+                // [수정] 한국 주소 형식에 맞게 시/도 (adminArea) 또는 시/군/구 (locality)를 우선 사용
+                val adminArea = address.adminArea // 예: 서울특별시
+                val locality = address.locality // 예: 강남구 (또는 도시 이름)
+
+                // Mountain View와 같은 영문 지명이 아닌, 서버가 기대하는 한글 지명을 찾습니다.
+                if (!locality.isNullOrEmpty() && locality != adminArea) {
+                    locality
+                } else if (!adminArea.isNullOrEmpty()) {
+                    adminArea
+                } else if (!address.subLocality.isNullOrEmpty()) {
+                    address.subLocality // 읍/면/동
+                } else {
+                    address.getAddressLine(0) // 전체 주소
+                }
             } else {
                 "위치 미확인"
             }
 
+            // [추가] 영문 결과를 한글로 변환하는 매핑 로직 (서버 호환성을 위함)
+            val finalRegion = when(region) {
+                // 테스트 환경에서 자주 반환되는 영문 지명을 한글로 변환
+                "Mountain View" -> "마운틴 뷰"
+                "Seoul" -> "서울"
+                "Gyeonggi-do" -> "경기도"
+                else -> region
+            }
+
             // 최종적으로 위치 업데이트 API 호출 및 레이더 로드
-            updateLocationAndLoad(lat, lng, region)
+            Log.d("RadarFragment", "Final Region for Server: $finalRegion")
+            updateLocationAndLoad(lat, lng, finalRegion)
 
         } catch (e: Exception) {
             Log.e("RadarFragment", "Geocoder failed: ${e.message}", e)
@@ -191,19 +225,27 @@ class RadarFragment : Fragment() {
 
     /**
      * 위치 정보를 서버에 업데이트하고 성공 시 레이더 데이터를 로드합니다.
+     * [수정] 토큰을 안전하게 로드하고 API 호출에 사용합니다.
      */
     private fun updateLocationAndLoad(lat: Double, lng: Double, region: String) {
-        // [수정] 서버 API 요청 바디용 모델 클래스를 사용하고 변수명을 명확히 변경
+        val token = context?.let { TokenManager.getAccessToken(it) }
+
+        if (token.isNullOrEmpty()) {
+            Toast.makeText(context, "로그인 정보가 없어 위치 업데이트에 실패했습니다.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // 서버 API 요청 바디용 모델 클래스를 사용
         val locationRequestForServer = com.example.matchbell.data.model.LocationRequest(
             lat = lat,
             lng = lng,
-            region = region
+            region = region // [수정] 이미 한글로 변환된(혹은 한국어 Locale을 사용한) region 값 사용
         )
 
         lifecycleScope.launch {
             try {
-                // 서버 API 호출 시 서버 전송용 객체를 사용
-                val response = authApi.updateMyLocation(locationRequestForServer)
+                // [수정] API 호출 시 "Bearer $token" 문자열을 첫 번째 인자로 전달 (AuthApi 수정 전제)
+                val response = authApi.updateMyLocation("Bearer $token", locationRequestForServer)
 
                 if (response.isSuccessful) {
                     Log.d("RadarFragment", "Location updated successfully.")
@@ -223,12 +265,20 @@ class RadarFragment : Fragment() {
 
     /**
      * 레이더 사용자 목록을 AuthApi로부터 로드하고 점수를 계산하여 아이템을 배치합니다.
+     * [수정] 토큰을 안전하게 로드하고 API 호출에 사용합니다.
      */
     private fun loadRadarData() {
+        val token = context?.let { TokenManager.getAccessToken(it) }
+
+        if (token.isNullOrEmpty()) {
+            Toast.makeText(context, "로그인 정보가 없어 레이더 로드에 실패했습니다.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         lifecycleScope.launch {
             try {
-                // [변경] authApi 사용
-                val response = authApi.getRadarUsers()
+                // [수정] API 호출 시 "Bearer $token" 문자열을 첫 번째 인자로 전달 (AuthApi 수정 전제)
+                val response = authApi.getRadarUsers("Bearer $token")
 
                 if (response.isSuccessful) {
                     val usersData = response.body()?.users ?: emptyList()
@@ -236,7 +286,6 @@ class RadarFragment : Fragment() {
                     val displayUsers = usersData.map { userData ->
 
                         // 1. MatchingScore를 사용하여 최종 점수 계산
-                        // T_min, T_p95는 MatchingScore.kt의 내부 상수를 사용한다고 가정
                         val calculatedScore = matchingScoreCalculator.calculateCompositeScore(
                             finalScore = userData.finalScore,
                             stressScore = userData.stressScore
@@ -245,16 +294,22 @@ class RadarFragment : Fragment() {
                         // 2. UI 표시용 데이터 가공
                         val affiliationText = "${userData.region}, ${userData.age}세"
 
-                        // 3. Display 모델 생성
+                        // 3. [추가] 이미지 URL에 서버 주소 붙이기 (ProfileEditFragment 로직 반영)
+                        val fullAvatarUrl = if (!userData.avatarUrl.isNullOrEmpty() && !userData.avatarUrl.startsWith("http")) {
+                            "$BASE_URL${userData.avatarUrl}"
+                        } else {
+                            userData.avatarUrl
+                        }
+
+                        // 4. Display 모델 생성
                         RadarUser(
                             id = userData.userId,
                             calculatedScore = calculatedScore,
                             name = userData.nickname,
-                            affiliation = affiliationText,
-                            avatarUrl = userData.avatarUrl
+                            affiliation = affiliationText
                         )
                     }
-                    // 4. 아이템 컨테이너에 배치 시작
+                    // 5. 아이템 컨테이너에 배치 시작
                     addRadarItems(displayUsers)
                 } else {
                     val errorMessage = response.errorBody()?.string() ?: "알 수 없는 에러"
@@ -358,8 +413,7 @@ class RadarFragment : Fragment() {
                     user.id.toInt(), // Int로 변환 (Bundle에 Int로 넣는 기존 코드 유지)
                     user.name,
                     user.affiliation,
-                    user.calculatedScore, // [추가] 점수 전달
-                    false // isMutual은 API에 없으므로 일단 false
+                    user.calculatedScore // [추가] 점수 전달
                 )
                 // dialog.show(parentFragmentManager, "RadarDialog") // 주석 처리된 이전 코드를 대체
                 dialog.show(parentFragmentManager, "RadarDialog")

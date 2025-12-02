@@ -1,10 +1,7 @@
 package com.example.matchbell.network
 
-import com.example.matchbell.data.model.*
-import okhttp3.MultipartBody
-import retrofit2.Response
-import retrofit2.http.*
 // 2. 데이터 모델 import 경로 수정
+import com.example.matchbell.data.model.AuthResponse
 import com.example.matchbell.data.model.ChangePasswordRequest
 import com.example.matchbell.data.model.CookieBalanceResponse
 import com.example.matchbell.data.model.CookieChargeRequest
@@ -13,15 +10,23 @@ import com.example.matchbell.data.model.EmailVerifyRequest
 import com.example.matchbell.data.model.LocationRequest
 import com.example.matchbell.data.model.LoginRequest
 import com.example.matchbell.data.model.ProfileResponse
+import com.example.matchbell.data.model.ProfileUpdateRequest
 import com.example.matchbell.data.model.ResetPasswordRequest
 import com.example.matchbell.data.model.SignupRequest
+import com.example.matchbell.data.model.UserProfileResponse
 import com.example.matchbell.data.model.VerifyCodeRequest
 import com.example.matchbell.data.model.VerifyResponse
 import com.example.matchbell.feature.RadarResponse
+import okhttp3.MultipartBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.Multipart
+import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.Part
 
 interface AuthApi {
 
@@ -103,10 +108,16 @@ interface AuthApi {
     @GET("/users/me")
     suspend fun getMyProfile(): Response<ProfileResponse>
 
+    // [수정] 토큰 헤더 추가
     @GET("/radar")
-    suspend fun getRadarUsers(): Response<RadarResponse>
+    suspend fun getRadarUsers(
+        @Header("Authorization") token: String // <<-- 토큰 인자 추가
+    ): Response<RadarResponse>
 
-    // [추가] 현위치 업데이트 API: POST /me/location
+    // [수정] 현위치 업데이트 API: POST /me/location
     @POST("/me/location")
-    suspend fun updateMyLocation(@Body request: LocationRequest): Response<Unit>
+    suspend fun updateMyLocation(
+        @Header("Authorization") token: String, // <<-- 토큰 인자 추가
+        @Body request: LocationRequest
+    ): Response<Unit>
 }

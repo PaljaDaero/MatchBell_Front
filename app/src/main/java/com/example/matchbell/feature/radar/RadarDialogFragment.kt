@@ -29,7 +29,6 @@ class RadarDialogFragment : DialogFragment() {
             name: String,
             affiliation: String,
             score: Int,
-            isMutual: Boolean
         ): RadarDialogFragment {
             return RadarDialogFragment().apply {
                 arguments = Bundle().apply {
@@ -37,7 +36,6 @@ class RadarDialogFragment : DialogFragment() {
                     putString(ARG_NAME, name)
                     putString(ARG_AFFILIATION, affiliation)
                     putInt(ARG_SCORE, score) // [추가] 점수 저장
-                    putBoolean(ARG_ISMUTUAL, isMutual) // [추가] 상호 여부 저장
                 }
             }
         }
