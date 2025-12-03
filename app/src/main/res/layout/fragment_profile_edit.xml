@@ -154,19 +154,31 @@
             android:textSize="14sp"
             app:layout_constraintTop_toBottomOf="@id/label_bio"/>
 
+        <TextView
+            android:id="@+id/tv_bio_limit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="28dp"
+            android:text="글자 수 15글자 제한"
+            android:textColor="#FF0000"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/et_bio" />
+
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_confirm"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginHorizontal="60dp"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="24dp"
             android:layout_marginBottom="40dp"
             android:background="@drawable/bt_my"
             android:text="확인"
             android:textColor="#FFFFFF"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@id/et_bio"
+            app:layout_constraintTop_toBottomOf="@id/tv_bio_limit"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

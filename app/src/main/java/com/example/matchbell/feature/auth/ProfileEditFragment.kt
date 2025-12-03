@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.text.InputFilter // 👈 추가된 import
 import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,6 +48,12 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
         val etJob = view.findViewById<EditText>(R.id.et_job)
         val etBio = view.findViewById<EditText>(R.id.et_bio)
         val btnConfirm = view.findViewById<Button>(R.id.btn_confirm)
+
+        // =========================================================
+        // 🎯 [추가] 자기소개(et_bio)에 15글자 제한 적용
+        val maxLength = 15
+        etBio.filters = arrayOf<InputFilter>(InputFilter.LengthFilter(maxLength))
+        // =========================================================
 
         // 1. 기존 정보 불러오기 (자동 채우기)
         viewModel.fetchMyProfile(requireContext())
@@ -94,7 +101,7 @@ class ProfileEditFragment : Fragment(R.layout.fragment_profile_edit) {
         btnConfirm.setOnClickListener {
             val nickname = etNickname.text.toString().trim()
             val job = etJob.text.toString().trim()
-            val bio = etBio.text.toString().trim()
+            val bio = etBio.text.toString().trim() // 👈 15글자로 제한됨 (로직 추가 완료)
 
             if (nickname.isEmpty()) {
                 Toast.makeText(context, "닉네임을 입력해주세요.", Toast.LENGTH_SHORT).show()
