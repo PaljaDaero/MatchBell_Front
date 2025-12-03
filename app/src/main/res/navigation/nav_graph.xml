@@ -114,7 +114,8 @@
             app:argType="string" />
         <argument
             android:name="PROFILE_URL"
-            app:argType="string" />
+            app:argType="string"
+            app:nullable="true" />
         <action
             android:id="@+id/action_chatRoomFragment_to_profileDetailFragment"
             app:destination="@id/profileDetailFragment" />
