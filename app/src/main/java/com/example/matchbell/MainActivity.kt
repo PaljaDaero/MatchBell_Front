@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
             // (2) 아이콘 색상 원본 유지
             navView.itemIconTintList = null
 
-            // (3) ⭐⭐⭐ [추가됨] 탭 클릭 시 화면 초기화 로직 ⭐⭐⭐
+            // (3) 탭 클릭 시 화면 초기화 로직
             navView.setOnItemSelectedListener { item ->
                 // 현재 탭과 다른 탭을 눌렀을 때만 작동
                 if (item.itemId != navView.selectedItemId) {
@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
                     // 네비게이션 옵션 설정: 상태 저장(Restore State) 끄기 -> 항상 새 화면!
                     val options = NavOptions.Builder()
                         .setLaunchSingleTop(true)
-                        .setRestoreState(false) // 👈 여기가 핵심! (이전 상태 복구 안 함)
+                        .setRestoreState(false)
                         .setPopUpTo(navController.graph.startDestinationId, false)
                         .build()
 
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
                 true
             }
 
-            // (4) ⭐⭐⭐ [추가됨] 이미 선택된 탭 다시 누를 때 (Re-select) 초기화 ⭐⭐⭐
+            // (4) 이미 선택된 탭 다시 누를 때 (Re-select) 초기화
             navView.setOnItemReselectedListener { item ->
                 // 백스택을 비워서 첫 화면으로 돌아가게 함
                 navController.popBackStack(item.itemId, false)

@@ -1,4 +1,4 @@
-package com.example.matchbell // (본인 패키지 이름인지 확인!)
+package com.example.matchbell
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

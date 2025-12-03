@@ -99,9 +99,6 @@ class ProfileDetailFragment : Fragment() {
         }
     }
 
-    // ... (updateUI, handleLockClick, lockProfileUI, unlockProfileUI, updateConstraints 코드는 이전과 동일)
-    // 아래에 그대로 복사해서 유지해주세요.
-
     private fun updateUI(profile: MatchProfileResponse) {
         binding.tvMessage.text = "${profile.nickname}님의 상세 프로필"
         val score = profile.compat.finalScore.toInt()

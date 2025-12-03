@@ -17,22 +17,6 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- nav_view 위에 위치시키고, 흰색 텍스트로 설정 -->
-    <TextView
-        android:id="@+id/tv_copyright"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="copyright @ 팔자대로."
-        android:textColor="#F3A6B5"
-        android:textSize="10sp"
-        android:paddingHorizontal="8dp"
-        android:paddingVertical="2dp"
-        android:layout_marginBottom="260dp"
-        app:layout_constraintBottom_toTopOf="@id/nav_view"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/nav_view"
         android:layout_width="0dp"
