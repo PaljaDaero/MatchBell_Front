@@ -130,26 +130,33 @@ class MyMatchingFragment : Fragment() {
                     val result = response.body()
 
                     if (result != null) {
-                        // [핵심 1] MatchingScore 클래스로 진짜 점수 계산!
-                        // 서버가 0을 보내줘도 여기서 계산 과정을 거치게 됨
+                        // API 명세에 따르면 점수와 성향 데이터는 'compat' 객체 안에 있습니다.
+                        val compatData = result.compat // MyCompatResponse의 compat 필드
+
+                        // [수정 1] 점수 계산: compat 객체 내의 finalScore, stressScore 사용
                         val realScore = matchingScoreCalculator.calculateCompositeScore(
-                            finalScore = result.finalScore,   // 서버값 (S)
-                            stressScore = result.stressScore  // 서버값 (T)
+                            finalScore = compatData.finalScore,   // compatData.finalScore로 수정
+                            stressScore = compatData.stressScore  // compatData.stressScore로 수정
                         )
 
-                        // [핵심 2] 성향 데이터 처리 (null이면 임시 멘트)
-                        // 서버 개발자가 아직 성향 로직을 안 짰으면 null이 올 수 있음
-                        val myTendencyText = result.myTendency ?: "분석된 성향이 없습니다"
-                        val partnerTendencyText = result.partnerTendency ?: "분석된 성향이 없습니다"
+                        // [수정 2] 성향 데이터 처리: tendency0, tendency1 사용 및 문자열로 변환
+                        // tendency0/1이 List<String> 형태이고 null일 수 있으므로 안전하게 처리합니다.
+                        val myTendencyText = compatData.tendency0
+                            ?.joinToString(", ") // List를 ", " 구분자로 문자열로 변환
+                            ?: "분석된 성향이 없습니다" // 데이터가 null이거나 빈 리스트일 경우 기본값
 
-                        Log.d("MyMatching", "Calculated Score: $realScore (S:${result.finalScore}, T:${result.stressScore})")
+                        val partnerTendencyText = compatData.tendency1
+                            ?.joinToString(", ") // List를 ", " 구분자로 문자열로 변환
+                            ?: "분석된 성향이 없습니다" // 데이터가 null이거나 빈 리스트일 경우 기본값
+
+                        Log.d("MyMatching", "Calculated Score: $realScore (S:${compatData.finalScore}, T:${compatData.stressScore})")
 
                         // 결과 화면으로 이동
                         val bundle = Bundle().apply {
                             putString("partnerName", name)
-                            putInt("score", realScore) // 계산된 점수 전달
-                            putString("myTendency", myTendencyText)
-                            putString("partnerTendency", partnerTendencyText)
+                            putInt("score", realScore) // 계산된 점수 전달 (이제 올바른 값을 참조)
+                            putString("myTendency", myTendencyText) // 올바르게 처리된 성향 문자열
+                            putString("partnerTendency", partnerTendencyText) // 올바르게 처리된 성향 문자열
                         }
                         findNavController().navigate(R.id.action_my_matching_result, bundle)
                     }

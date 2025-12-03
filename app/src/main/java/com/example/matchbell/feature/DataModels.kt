@@ -164,6 +164,31 @@ data class RankingListResponse(
     val items: List<RankingItem>
 )
 
+// [새로 추가/수정할 클래스] compat 객체 안의 상세 데이터를 담는 모델
+data class CompatDetail(
+    // finalScore와 stressScore는 그대로 두되, API 명세에 따라 필드 이름을 사용합니다.
+    val finalScore: Double,
+    val stressScore: Double,
+
+    // 성향 데이터 필드명 수정: API 명세의 tendency0, tendency1으로 변경
+    // (이전에 사용했던 myTendency, partnerTendency는 API JSON에 없었습니다.)
+    val tendency0: List<String>?, // 사용자 성향 (List<String> 타입 가정)
+    val tendency1: List<String>?  // 상대방 성향 (List<String> 타입 가정)
+
+    // 필요하다면 originalScore, sal0, person0 등도 추가
+)
+
+// [기존 MyCompatResponse 수정] 최상위 JSON 구조를 반영하도록 변경
+data class MyCompatResponse(
+    val targetName: String,
+    val targetGender: String,
+    val targetBirth: String,
+
+    // **[핵심 수정]** 서버가 보내는 'compat' 객체를 받습니다.
+    val compat: CompatDetail // 오류를 해결하는 핵심!
+)
+
+/*
 data class MyCompatResponse(
     // 1. 점수 계산을 위한 원본 데이터 (서버가 이걸 줘야 함!)
     @SerializedName("finalScore")
@@ -182,7 +207,7 @@ data class MyCompatResponse(
 
     @SerializedName("description")
     val description: String?
-)
+) */
 
 // [추가] 프로필 잠금 해제 응답 모델
 data class ProfileUnlockResponse(
