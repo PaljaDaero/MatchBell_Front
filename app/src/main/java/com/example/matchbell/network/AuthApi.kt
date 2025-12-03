@@ -158,9 +158,9 @@ interface AuthApi {
         @Path("targetUserId") targetUserId: Long
     ): Response<Unit>
 
-    // [추가] 상대방 상세 프로필 조회
-    // 명세에 주신 경로: /me/matches/{targetUserId}/profile
-    @GET("/me/matches/{targetUserId}/profile")
+    // [수정] 상대방 상세 프로필 조회 (엔드포인트 변경됨)
+    // 경로 예시: /profiles/{targetUserId}
+    @GET("/profiles/{targetUserId}")
     suspend fun getMatchProfile(
         @Header("Authorization") token: String,
         @Path("targetUserId") targetUserId: Long

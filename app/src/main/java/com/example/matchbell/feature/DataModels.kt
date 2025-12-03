@@ -1,7 +1,5 @@
 package com.example.matchbell.feature
 
-import com.google.gson.annotations.SerializedName
-
 /**
  * 채팅방 목록에 표시될 각 채팅방의 데이터를 담는 모델입니다.
  */
@@ -108,18 +106,36 @@ data class MatchSummary(
     val matchedAt: String
 )
 
-// [추가] 상대방 상세 프로필 조회 응답 모델 (JSON 명세 반영)
+// [수정] 상세 프로필 응답 모델 (변경된 API 구조 반영)
 data class MatchProfileResponse(
+    val basic: ProfileBasicInfo,
+    val detail: ProfileDetailInfo?, // 잠금 상태이거나 매칭 전이면 null일 수 있음
+
+    val isSelf: Boolean,
+    val isMatched: Boolean,
+    val hasUnlocked: Boolean,
+
+    val canChat: Boolean,
+    val canUnlock: Boolean
+)
+
+// [추가] 기본 프로필 정보 (항상 보임)
+data class ProfileBasicInfo(
     val userId: Long,
     val nickname: String,
-    val intro: String?,
-    val gender: String, // "MALE" or "FEMALE"
-    val birth: String,
+    val age: Int,
     val region: String,
-    val job: String,
     val avatarUrl: String?,
-    val tendency: String,
-    val compat: CompatResult // 아래에 정의된 중첩 객체
+    val shortIntro: String?,
+    val tendency: String?
+)
+
+// [추가] 상세 프로필 정보 (잠금 해제 시 보임)
+data class ProfileDetailInfo(
+    val intro: String?,
+    val job: String?,
+    val birth: String?,
+    val compat: CompatResult? // 궁합 점수 등
 )
 
 // [추가] 상세 프로필 내 궁합 점수 데이터
@@ -187,27 +203,6 @@ data class MyCompatResponse(
     // **[핵심 수정]** 서버가 보내는 'compat' 객체를 받습니다.
     val compat: CompatDetail // 오류를 해결하는 핵심!
 )
-
-/*
-data class MyCompatResponse(
-    // 1. 점수 계산을 위한 원본 데이터 (서버가 이걸 줘야 함!)
-    @SerializedName("finalScore")
-    val finalScore: Double,
-
-    @SerializedName("stressScore")
-    val stressScore: Double,
-
-    // 2. 성향 데이터 (혹시 null로 오더라도 앱에서 처리 가능하게 Nullable로 선언)
-    // 서버가 "my_tendency"로 보내든 "myTendency"로 보내든 다 받기 위해 이름 강제 지정
-    @SerializedName("my_tendency", alternate = ["myTendency"])
-    val myTendency: String?,
-
-    @SerializedName("partner_tendency", alternate = ["partnerTendency"])
-    val partnerTendency: String?,
-
-    @SerializedName("description")
-    val description: String?
-) */
 
 // [추가] 프로필 잠금 해제 응답 모델
 data class ProfileUnlockResponse(

@@ -102,16 +102,44 @@ class ProfileDetailFragment : Fragment() {
         }
     }
 
-    private fun updateUI(profile: MatchProfileResponse) {
-        binding.tvMessage.text = "${profile.nickname}님의 상세 프로필"
-        val score = profile.compat.finalScore.toInt()
+    // 서버 응답 데이터 바인딩 함수 수정
+    private fun updateUI(response: MatchProfileResponse) {
+        val basic = response.basic
+        val detail = response.detail
+
+        // 1. 기본 정보 (Basic) - 항상 표시
+        binding.tvMessage.text = "${basic.nickname}님의 상세 프로필"
+
+        // 궁합 점수는 detail에 있을 수도 있고, 계산해야 할 수도 있음.
+        // 일단 detail이 없으면 0점 처리 혹은 radar에서 가져온 값 유지
+        val score = detail?.compat?.finalScore?.toInt() ?: 0 // (Radar에서 넘겨받은 값을 쓰는 게 더 나을 수 있음)
         binding.tvMatchBadge.text = "나와의 궁합 ${score}점!"
-        binding.textView.text = profile.intro ?: "자기소개가 없습니다."
-        binding.tvJob.text = profile.job
-        binding.tvRegionReal.text = profile.region
-        binding.tvBirthReal.text = profile.birth
-        if (!profile.avatarUrl.isNullOrEmpty()) {
-            Glide.with(this).load(profile.avatarUrl).into(binding.ivProfileReal)
+
+        binding.tvRegionReal.text = basic.region
+
+        // 2. 상세 정보 (Detail) - null이면 잠금 상태
+        if (detail != null) {
+            binding.textView.text = detail.intro ?: basic.shortIntro ?: "소개가 없습니다."
+            binding.tvJob.text = detail.job ?: "정보 없음"
+            binding.tvBirthReal.text = detail.birth ?: "0000.00.00"
+
+            // 이미 풀려있는 상태라면 UI도 해제
+            if (response.hasUnlocked) {
+                unlockProfileUI()
+            }
+        } else {
+            // 상세 정보가 없으면 (잠금 상태) 기본 멘트
+            binding.textView.text = basic.shortIntro ?: "잠금된 프로필입니다."
+            binding.tvJob.text = "잠금 상태"
+        }
+
+        // 3. 상태값 업데이트 (서버가 알려준 값 사용)
+        isMatched = response.isMatched
+        // isUnlocked = response.hasUnlocked // (필요 시 로컬 변수 동기화)
+
+        // 4. 이미지 로드
+        if (!basic.avatarUrl.isNullOrEmpty()) {
+            Glide.with(this).load(basic.avatarUrl).into(binding.ivProfileReal)
         }
     }
 
