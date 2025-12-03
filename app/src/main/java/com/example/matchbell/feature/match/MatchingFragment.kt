@@ -26,9 +26,9 @@ import javax.inject.Inject
 data class MatchUiItem(
     val userId: Long,
     val nickname: String,
-    val infoText: String, // affiliation 대용 (지역 + 직업 등)
-    val score: Int,       // API에 점수가 없으므로 기본값 처리하거나 추후 연동
-    val isMatched: Boolean, // true: 매칭완료(하트), false: 궁금해요(빈하트)
+    val infoText: String,
+    val score: Int,
+    val isMatched: Boolean,
     val avatarUrl: String?
 )
 
@@ -51,13 +51,10 @@ class MatchingFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // API 호출하여 데이터 로드
         loadMatchingData()
     }
 
     private fun loadMatchingData() {
-        // 1. 토큰 가져오기
         val token = context?.let { TokenManager.getAccessToken(it) }
         if (token.isNullOrEmpty()) {
             Toast.makeText(context, "로그인 정보가 없습니다.", Toast.LENGTH_SHORT).show()
@@ -67,7 +64,6 @@ class MatchingFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                // 3개의 API를 동시에 비동기 호출 (성능 최적화)
                 val sentDeferred = async { authApi.getSentCurious(headerToken) }
                 val receivedDeferred = async { authApi.getReceivedCurious(headerToken) }
                 val matchesDeferred = async { authApi.getMatches(headerToken) }
@@ -78,23 +74,23 @@ class MatchingFragment : Fragment() {
 
                 val uiList = mutableListOf<MatchUiItem>()
 
-                // (1) 매칭 완료 리스트 처리 (Heart)
+                // (1) 매칭 완료
                 if (matchesResponse.isSuccessful) {
                     matchesResponse.body()?.forEach { match ->
                         uiList.add(
                             MatchUiItem(
                                 userId = match.userId,
                                 nickname = match.nickname,
-                                infoText = "${match.region} | ${match.job}", // 정보 조합
-                                score = 0, // 매칭 API에 점수가 없어서 0으로 표기 (필요시 백엔드 요청)
-                                isMatched = true, // 하트 표시
+                                infoText = "${match.region} | ${match.job}",
+                                score = 0,
+                                isMatched = true,
                                 avatarUrl = match.avatarUrl
                             )
                         )
                     }
                 }
 
-                // (2) 받은 궁금해요 리스트 처리 (Unheart)
+                // (2) 받은 궁금해요
                 if (receivedResponse.isSuccessful) {
                     receivedResponse.body()?.forEach { curious ->
                         uiList.add(
@@ -103,14 +99,14 @@ class MatchingFragment : Fragment() {
                                 nickname = curious.nickname,
                                 infoText = "나에게 궁금해요를 보냄",
                                 score = 0,
-                                isMatched = false, // 빈 하트
+                                isMatched = false,
                                 avatarUrl = curious.avatarUrl
                             )
                         )
                     }
                 }
 
-                // (3) 보낸 궁금해요 리스트 처리 (Unheart)
+                // (3) 보낸 궁금해요
                 if (sentResponse.isSuccessful) {
                     sentResponse.body()?.forEach { curious ->
                         uiList.add(
@@ -119,14 +115,13 @@ class MatchingFragment : Fragment() {
                                 nickname = curious.nickname,
                                 infoText = "내가 궁금해요를 보냄",
                                 score = 0,
-                                isMatched = false, // 빈 하트
+                                isMatched = false,
                                 avatarUrl = curious.avatarUrl
                             )
                         )
                     }
                 }
 
-                // UI에 아이템 추가
                 addMatchItems(uiList)
 
             } catch (e: Exception) {
@@ -139,48 +134,50 @@ class MatchingFragment : Fragment() {
     @SuppressLint("SetTextI18n")
     private fun addMatchItems(users: List<MatchUiItem>) {
         val container = binding.llMatchingItemsContainer
-        container.removeAllViews() // 기존 뷰 초기화 (새로고침 시 중복 방지)
+        container.removeAllViews()
 
         val inflater = LayoutInflater.from(context)
 
         users.forEach { user ->
-            // item_matching_list.xml 레이아웃 인플레이트
             val itemView = inflater.inflate(R.layout.item_matching_list, container, false)
 
             // 1. 텍스트 데이터 바인딩
-            // 점수가 0이면 숨기거나 다른 텍스트로 대체 가능
             if (user.score > 0) {
                 itemView.findViewById<TextView>(R.id.tv_score_value).text = " ${user.score}점"
             } else {
                 itemView.findViewById<TextView>(R.id.tv_score_value).text = " 궁합 ?"
             }
 
-            // 닉네임이나 소속 정보 표시
-            // (레이아웃에 닉네임 뷰가 없다면 affiliation 뷰에 합쳐서 표시하거나 레이아웃 수정 필요)
-            // 여기서는 기존 affiliation 뷰에 닉네임 + 정보를 같이 보여줍니다.
             itemView.findViewById<TextView>(R.id.tv_affiliation).text = "${user.nickname}\n${user.infoText}"
 
-            // 2. 잠금 버튼 (프로필 상세보기)
+            // 2. [수정] 잠금 버튼 클릭 시 상세 페이지로 이동 (데이터 전달 포함)
             val btnLockProfile = itemView.findViewById<ImageButton>(R.id.btn_lock)
             btnLockProfile.setOnClickListener {
-                // 프로필 상세 화면으로 이동 (필요 시 Bundle로 userId 전달)
-                // val bundle = Bundle().apply { putLong("USER_ID", user.userId) }
-                findNavController().navigate(R.id.action_matchingFragment_to_profileDetailFragment)
+                // ProfileDetailFragment에서 받을 데이터를 Bundle에 담습니다.
+                val bundle = Bundle().apply {
+                    putLong("targetUserId", user.userId) // [필수] ID
+                    putString("targetName", user.nickname)
+                    putString("targetRegion", user.infoText) // 임시로 infoText를 넘김
+                    putInt("targetScore", user.score)
+                }
+
+                // 네비게이션 이동 (Bundle 전달)
+                findNavController().navigate(
+                    R.id.action_matchingFragment_to_profileDetailFragment,
+                    bundle
+                )
             }
 
-            // 3. 하트/궁금해요 상태 처리
+            // 3. 하트 상태 처리
             val tvLikeText = itemView.findViewById<TextView>(R.id.tv_like_text)
             val ivHeartIcon = itemView.findViewById<ImageView>(R.id.iv_heart_icon)
 
             if (user.isMatched) {
-                // 매칭 완료 상태 (채팅 가능)
                 tvLikeText.text = "매칭완료"
-                ivHeartIcon.setImageResource(R.drawable.ic_heart) // 꽉 찬 하트
-
+                ivHeartIcon.setImageResource(R.drawable.ic_heart)
             } else {
-                // 궁금해요 상태 (아직 매칭 안됨)
                 tvLikeText.text = "궁금해요"
-                ivHeartIcon.setImageResource(R.drawable.ic_unheart) // 빈 하트
+                ivHeartIcon.setImageResource(R.drawable.ic_unheart)
             }
 
             container.addView(itemView)

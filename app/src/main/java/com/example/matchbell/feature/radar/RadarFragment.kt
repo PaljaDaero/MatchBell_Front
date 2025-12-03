@@ -58,7 +58,7 @@ class RadarFragment : Fragment() {
     private var _binding: FragmentRadarBinding? = null
     private val binding get() = _binding!!
 
-    // Animation objects list
+    // 애니메이션 객체들을 보관할 리스트
     private val animators = mutableListOf<ObjectAnimator>()
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -70,6 +70,7 @@ class RadarFragment : Fragment() {
                 stopLocationUpdates()
                 val lat = location.latitude
                 val lng = location.longitude
+                // 여기서 바로 호출
                 getRegionFromLocation(lat, lng)
             }
         }
@@ -86,7 +87,7 @@ class RadarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Ensure radar rings are visible
+        // [확인사살] 뷰가 XML에서 alpha=0이었더라도 강제로 보이게 설정
         binding.radarRing1.alpha = 1f
         binding.radarRing2.alpha = 1f
         binding.radarRing3.alpha = 1f
@@ -109,30 +110,36 @@ class RadarFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         stopPulseAnimation()
+        stopLocationUpdates() // [중요] 화면 나가면 위치 요청 취소 (크래시 방지)
     }
 
     private fun startPulseAnimation() {
-        stopPulseAnimation()
+        stopPulseAnimation() // 기존 애니메이션 정리
 
         if (_binding == null) return
 
-        val animDuration = 900L
-        val interval = 100L
+        // 속도 설정 (숫자를 작게 할수록 빨라짐)
+        val animDuration = 900L  // 1.5초 -> 0.9초로 단축
+        val interval = 100L      // 링 사이 간격도 500ms -> 300ms로 단축
 
+        // 헬퍼 함수
         fun createAnim(target: View, delay: Long): ObjectAnimator {
+            // alpha: 0.1(흐릿) <-> 0.7(진함) 반복
             return ObjectAnimator.ofFloat(target, "alpha", 0.1f, 0.7f).apply {
                 duration = animDuration
                 startDelay = delay
                 repeatCount = ValueAnimator.INFINITE
-                repeatMode = ValueAnimator.REVERSE
-                interpolator = AccelerateDecelerateInterpolator()
+                repeatMode = ValueAnimator.REVERSE // 켜졌다 꺼졌다 반복
+                interpolator = AccelerateDecelerateInterpolator() // 부드러운 가속도
             }
         }
 
+        // 3개의 링 생성 (0초, 0.3초, 0.6초 뒤 출발)
         val ani1 = createAnim(binding.radarRing1, 0)
         val ani2 = createAnim(binding.radarRing2, interval)
         val ani3 = createAnim(binding.radarRing3, interval * 2)
 
+        // 리스트에 추가 및 시작
         animators.add(ani1)
         animators.add(ani2)
         animators.add(ani3)
@@ -145,6 +152,8 @@ class RadarFragment : Fragment() {
         animators.clear()
     }
 
+    // --- (아래는 기존 위치/서버 로직 그대로 유지) ---
+
     private fun acquireLocationAndLoadRadar() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             startLocationUpdates()
@@ -155,12 +164,14 @@ class RadarFragment : Fragment() {
 
     @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        super.onRequestPermissionsResult(/* requestCode = */ requestCode, /* permissions = */
+            permissions, /* grantResults = */
+            grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startLocationUpdates()
             } else {
-                Toast.makeText(context, "Location permission required", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "위치 권한 필요", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -180,29 +191,33 @@ class RadarFragment : Fragment() {
     }
 
     private fun getRegionFromLocation(lat: Double, lng: Double) {
+        // [핵심 수정] 뷰가 파괴되었는지 먼저 체크 (NPE 방지)
+        if (_binding == null || context == null) return
+
         val geocoder = Geocoder(requireContext(), Locale.KOREA)
         try {
+            // Geocoder는 네트워크 상황에 따라 오래 걸릴 수 있으므로 코루틴 안에서 돌리면 더 좋지만,
+            // 현재 구조상 try-catch로 방어합니다.
             val addresses = geocoder.getFromLocation(lat, lng, 1)
             val region = if (!addresses.isNullOrEmpty()) {
-                // Prioritize locality (City/District), then adminArea (Province/State)
-                addresses[0].locality ?: addresses[0].adminArea ?: "Unknown Location"
+                addresses[0].locality ?: addresses[0].adminArea
             } else {
-                "Unknown Location"
+                "서울"
             }
-
-            // Map known English locations to Korean if necessary
             val finalRegion = when(region) {
                 "Mountain View" -> "마운틴 뷰"
                 "Seoul" -> "서울"
-                else -> region
+                else -> region ?: "서울"
             }
 
-            // Update UI with current location
+            // UI 업데이트 전 binding 체크는 위에서 했음
             binding.tvCurrentLocation.text = finalRegion
 
             updateLocationAndLoad(lat, lng, finalRegion)
         } catch (_: Exception) {
-            binding.tvCurrentLocation.text = "위치 확인 불가"
+            if (_binding != null) {
+                binding.tvCurrentLocation.text = "위치 확인 불가"
+            }
             updateLocationAndLoad(lat, lng, "서울")
         }
     }
@@ -271,10 +286,11 @@ class RadarFragment : Fragment() {
 
             val itemView = LayoutInflater.from(requireContext()).inflate(R.layout.item_radar_target, container, false)
             val tvScore = itemView.findViewById<TextView>(R.id.tv_score)
-            val tvClick = itemView.findViewById<TextView>(R.id.tv_click)
+            val tvClick = itemView.findViewById<TextView>(R.id.tv_click) // 반짝이는 배경
 
             tvScore.text = user.calculatedScore.toString()
 
+            // 아이템 반짝임 효과
             val itemBlink = blink.clone()
             itemBlink.target = tvClick
             itemBlink.start()

@@ -74,7 +74,7 @@ class MyMatchingFragment : Fragment() {
         binding.etDob.setOnClickListener {
             val calendar = Calendar.getInstance()
 
-            // 기본값 설정 (현재 날짜 대신 2000년 1월 1일로 시작하고 싶다면 여기서 변경 가능)
+            // 기본값 설정
             val year = calendar.get(Calendar.YEAR)
             val month = calendar.get(Calendar.MONTH)
             val day = calendar.get(Calendar.DAY_OF_MONTH)

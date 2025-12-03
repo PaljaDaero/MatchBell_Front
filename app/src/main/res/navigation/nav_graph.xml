@@ -79,9 +79,7 @@
     <!-- 2. 매칭리스트 -->
     <fragment
         android:id="@+id/matchingFragment"
-        android:name="com.example.matchbell.feature.match.MatchingFragment"
-        android:label="fragment_matching"
-        tools:layout="@layout/fragment_matching" >
+        android:name="com.example.matchbell.feature.match.MatchingFragment" >
         <action
             android:id="@+id/action_matchingFragment_to_profileDetailFragment"
             app:destination="@id/profileDetailFragment" />

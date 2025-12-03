@@ -149,7 +149,7 @@ class ProfileDetailFragment : Fragment() {
                 } else {
                     val errorMsg = response.errorBody()?.string() ?: ""
                     if (response.code() == 403) {
-                        Toast.makeText(context, "아직 서로 궁금해요(매칭) 상태가 아닙니다.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "아직 매칭 상태가 아닙니다.", Toast.LENGTH_LONG).show()
                     } else if (response.code() == 400) {
                         Toast.makeText(context, "쿠키가 부족합니다.", Toast.LENGTH_SHORT).show()
                     } else {
