@@ -1,5 +1,6 @@
 package com.example.matchbell.feature.profile
 
+// CookieSpendDialogFragment 패키지 확인 필요 (com.example.matchbell.feature.profile 인지 com.example.matchbell 인지)
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -9,6 +10,7 @@ import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.example.matchbell.databinding.FragmentProfileDetailBinding
 import com.example.matchbell.feature.MatchProfileResponse
@@ -29,7 +31,10 @@ class ProfileDetailFragment : Fragment() {
 
     private var isUnlocked = false
     private var targetUserId: Long = -1L
-    private var isMatched = true
+
+    // [수정] isMatched는 더 이상 '진입 차단'용이 아니라, '잠금 해제 가능 여부' 판단용이 될 수 있음
+    // 하지만 API 자체가 "매칭된 유저만" 해제 가능하다면 API가 알아서 에러를 줄 것입니다.
+    private var isMatched = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,18 +47,30 @@ class ProfileDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. UserId 확인
-        targetUserId = arguments?.getLong("targetUserId") ?: -1L
-
-        // [로그] 전달받은 ID가 정상인지 확인
-        Log.d("ProfileDetail", "Passed Target User ID: $targetUserId")
+        // 1. 기본 정보 받기 (Radar에서 넘겨준 값)
+        val args = arguments
+        targetUserId = args?.getLong("targetUserId") ?: -1L
+        val basicName = args?.getString("targetName") ?: "알 수 없음"
+        val basicScore = args?.getInt("targetScore") ?: 0
+        val basicRegion = args?.getString("targetRegion") ?: ""
 
         if (targetUserId == -1L) {
-            Toast.makeText(context, "유저 ID 오류", Toast.LENGTH_SHORT).show()
+            findNavController().popBackStack()
             return
         }
 
+        // 2. 기본 UI 세팅 (API 로드 전)
+        binding.tvMessage.text = "${basicName}님의 상세 프로필"
+        binding.tvMatchBadge.text = "나와의 궁합 ${basicScore}점!"
+        binding.tvRegionReal.text = basicRegion
+        binding.textView.text = "자기소개 정보가 없습니다." // 기본값
+        binding.tvJob.text = "정보 없음"
+        binding.tvBirthReal.text = "0000.00.00"
+
+        // 3. 초기 잠금
         lockProfileUI()
+
+        // 4. 상세 데이터 로드 (매칭 안 됐으면 403 뜰 수 있음 -> 그래도 화면은 유지)
         loadProfileData()
 
         val lockClickListener = View.OnClickListener { handleLockClick() }
@@ -67,34 +84,20 @@ class ProfileDetailFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                Log.d("ProfileDetail", "Requesting profile for ID: $targetUserId...")
                 val response = authApi.getMatchProfile("Bearer $token", targetUserId)
 
                 if (response.isSuccessful) {
                     val profile = response.body()
                     if (profile != null) {
-                        Log.d("ProfileDetail", "Load Success: ${profile.nickname}")
+                        isMatched = true // 성공 = 매칭됨
                         updateUI(profile)
-                    } else {
-                        Log.e("ProfileDetail", "Response Body is NULL")
-                        Toast.makeText(context, "데이터가 비어있습니다.", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    // [중요] 실패 원인 로그 출력
-                    val errorBody = response.errorBody()?.string()
-                    Log.e("ProfileDetail", "Load Failed! Code: ${response.code()}, Body: $errorBody")
-
-                    if (response.code() == 404) {
-                        Toast.makeText(context, "존재하지 않거나 매칭되지 않은 유저입니다.", Toast.LENGTH_LONG).show()
-                    } else if (response.code() == 500) {
-                        Toast.makeText(context, "서버 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(context, "프로필 로드 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
-                    }
+                    // 403 등 에러가 나도 '기본 정보'는 이미 뿌려져 있으므로 괜찮음
+                    Log.d("ProfileDetail", "Load failed: ${response.code()} (Not matched yet?)")
                 }
             } catch (e: Exception) {
                 Log.e("ProfileDetail", "Network Error", e)
-                Toast.makeText(context, "네트워크 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -114,12 +117,49 @@ class ProfileDetailFragment : Fragment() {
 
     private fun handleLockClick() {
         if (isUnlocked) return
-        if (!isMatched) {
-            Toast.makeText(context, "매칭된 상태일 때만 확인할 수 있습니다.", Toast.LENGTH_LONG).show()
-            return
-        }
-        val dialog = CookieSpendDialogFragment(onUnlockSuccess = { unlockProfileUI() })
+
+        // 쿠키 사용 팝업 띄우기
+        // [중요] 팝업의 '확인' 버튼을 누르면 -> requestProfileUnlock() 호출
+        val dialog = CookieSpendDialogFragment(
+            onConfirm = {
+                requestProfileUnlock()
+            }
+        )
         dialog.show(parentFragmentManager, "CookieSpendDialog")
+    }
+
+    // [핵심] 실제 잠금 해제 API 호출
+    private fun requestProfileUnlock() {
+        val token = context?.let { TokenManager.getAccessToken(it) } ?: return
+
+        lifecycleScope.launch {
+            try {
+                // 새로 만든 API 호출 (/me/matches/{id}/profile/unlock)
+                val response = authApi.unlockProfile("Bearer $token", targetUserId)
+
+                if (response.isSuccessful) {
+                    val result = response.body()
+                    Toast.makeText(context, "잠금 해제! (남은 쿠키: ${result?.balanceAfter})", Toast.LENGTH_SHORT).show()
+
+                    // UI 잠금 해제
+                    unlockProfileUI()
+
+                    // 해제 후엔 데이터를 다시 로드해서 확실하게 보여주는 것이 좋음
+                    loadProfileData()
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: ""
+                    if (response.code() == 403) {
+                        Toast.makeText(context, "아직 서로 궁금해요(매칭) 상태가 아닙니다.", Toast.LENGTH_LONG).show()
+                    } else if (response.code() == 400) {
+                        Toast.makeText(context, "쿠키가 부족합니다.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "잠금 해제 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "네트워크 오류", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun lockProfileUI() {

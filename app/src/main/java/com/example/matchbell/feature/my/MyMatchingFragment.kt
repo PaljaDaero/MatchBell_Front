@@ -1,5 +1,6 @@
 package com.example.matchbell.feature.my
 
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,11 +12,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.matchbell.R
 import com.example.matchbell.databinding.FragmentMyMatchingBinding
+import com.example.matchbell.feature.MatchingScore // [필수 import] 점수 계산기
 import com.example.matchbell.feature.MyCompatRequest
 import com.example.matchbell.feature.auth.TokenManager
 import com.example.matchbell.network.AuthApi
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -23,6 +26,9 @@ class MyMatchingFragment : Fragment() {
 
     @Inject
     lateinit var authApi: AuthApi
+
+    // [추가] 궁합 점수 계산기 인스턴스 생성
+    private val matchingScoreCalculator = MatchingScore()
 
     private var _binding: FragmentMyMatchingBinding? = null
     private val binding get() = _binding!!
@@ -37,28 +43,22 @@ class MyMatchingFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // 1. 성별 체크박스 중복 선택 방지 (하나만 선택되게)
         setupGenderCheckBoxes()
+        setupDatePicker()
 
-        // 2. 결과 보기 버튼 클릭 (API 호출)
         binding.btnResult.setOnClickListener {
             requestMyMatching()
         }
     }
-
     private fun setupGenderCheckBoxes() {
-        // 남성 체크 시 -> 여성 체크 해제
         binding.cbMale.setOnClickListener {
             if (binding.cbMale.isChecked) {
                 binding.cbFemale.isChecked = false
             } else {
-                // 둘 다 꺼지는 거 방지 (최소 하나는 선택) - 필요 시 제거 가능
                 binding.cbMale.isChecked = true
             }
         }
 
-        // 여성 체크 시 -> 남성 체크 해제
         binding.cbFemale.setOnClickListener {
             if (binding.cbFemale.isChecked) {
                 binding.cbMale.isChecked = false
@@ -68,52 +68,97 @@ class MyMatchingFragment : Fragment() {
         }
     }
 
+    private fun setupDatePicker() {
+        binding.etDob.isFocusable = false // 키보드 안 뜨게 설정
+        binding.etDob.isClickable = true
+        binding.etDob.setOnClickListener {
+            val calendar = Calendar.getInstance()
+
+            // 기본값 설정 (현재 날짜 대신 2000년 1월 1일로 시작하고 싶다면 여기서 변경 가능)
+            val year = calendar.get(Calendar.YEAR)
+            val month = calendar.get(Calendar.MONTH)
+            val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+            val datePickerDialog = DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
+                // 선택된 날짜 처리
+                val formattedMonth = (selectedMonth + 1).toString().padStart(2, '0')
+                val formattedDay = selectedDay.toString().padStart(2, '0')
+                binding.etDob.setText("$selectedYear-$formattedMonth-$formattedDay")
+            }, year, month, day)
+
+            // --- 날짜 제한 설정 (2000년 ~ 2021년) ---
+
+            // 최소 날짜: 2000년 1월 1일
+            val minDate = Calendar.getInstance()
+            minDate.set(2000, 0, 1) // Month는 0부터 시작 (0 = 1월)
+            datePickerDialog.datePicker.minDate = minDate.timeInMillis
+
+            // 최대 날짜: 2021년 12월 31일
+            val maxDate = Calendar.getInstance()
+            maxDate.set(2021, 11, 31) // 11 = 12월
+            datePickerDialog.datePicker.maxDate = maxDate.timeInMillis
+
+            datePickerDialog.show()
+        }
+    }
+
     private fun requestMyMatching() {
         val name = binding.etName.text.toString().trim()
-        val birth = binding.etDob.text.toString().trim()
+        val birthRaw = binding.etDob.text.toString().trim()
 
-        // 유효성 검사
-        if (name.isEmpty() || birth.isEmpty()) {
-            Toast.makeText(context, "이름과 생년월일을 입력해주세요.", Toast.LENGTH_SHORT).show()
+        if (name.isEmpty() || birthRaw.isEmpty()) {
+            Toast.makeText(context, "정보를 모두 입력해주세요.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 성별 결정
+        // 날짜 파싱 (숫자만 추출해서 YYYY-MM-DD)
+        val dateParts = birthRaw.split(Regex("[^0-9]")).filter { it.isNotEmpty() }
+        if (dateParts.size < 3) return
+        val formattedBirth = "${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}"
+
         val gender = if (binding.cbMale.isChecked) "MALE" else "FEMALE"
-
-        // 날짜 형식 간단 체크 (YYYY-MM-DD 형식 권장)
-        // 실제로는 정규식 등으로 엄격하게 체크하거나 DatePicker를 쓰는 게 좋습니다.
-        if (!birth.contains("-") || birth.length < 8) {
-            Toast.makeText(context, "생년월일은 YYYY-MM-DD 형식으로 입력해주세요.", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         val token = context?.let { TokenManager.getAccessToken(it) } ?: return
 
         lifecycleScope.launch {
             try {
-                val request = MyCompatRequest(name, gender, birth)
+                val request = MyCompatRequest(name, gender, formattedBirth)
+
+                // API 호출
                 val response = authApi.postMyCompat("Bearer $token", request)
 
                 if (response.isSuccessful) {
                     val result = response.body()
-                    val score = result?.score ?: 0
 
-                    // 결과 화면으로 데이터 전달하며 이동
-                    val bundle = Bundle().apply {
-                        putString("partnerName", name)
-                        putInt("score", score)
-                        // 설명이 있다면 전달
-                        putString("description", result?.description)
+                    if (result != null) {
+                        // [핵심 1] MatchingScore 클래스로 진짜 점수 계산!
+                        // 서버가 0을 보내줘도 여기서 계산 과정을 거치게 됨
+                        val realScore = matchingScoreCalculator.calculateCompositeScore(
+                            finalScore = result.finalScore,   // 서버값 (S)
+                            stressScore = result.stressScore  // 서버값 (T)
+                        )
+
+                        // [핵심 2] 성향 데이터 처리 (null이면 임시 멘트)
+                        // 서버 개발자가 아직 성향 로직을 안 짰으면 null이 올 수 있음
+                        val myTendencyText = result.myTendency ?: "분석된 성향이 없습니다"
+                        val partnerTendencyText = result.partnerTendency ?: "분석된 성향이 없습니다"
+
+                        Log.d("MyMatching", "Calculated Score: $realScore (S:${result.finalScore}, T:${result.stressScore})")
+
+                        // 결과 화면으로 이동
+                        val bundle = Bundle().apply {
+                            putString("partnerName", name)
+                            putInt("score", realScore) // 계산된 점수 전달
+                            putString("myTendency", myTendencyText)
+                            putString("partnerTendency", partnerTendencyText)
+                        }
+                        findNavController().navigate(R.id.action_my_matching_result, bundle)
                     }
-                    findNavController().navigate(R.id.action_my_matching_result, bundle)
-
                 } else {
                     Toast.makeText(context, "분석 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Log.e("MyMatching", "Network Error", e)
-                Toast.makeText(context, "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                Log.e("MyMatching", "Error", e)
+                Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             }
         }
     }

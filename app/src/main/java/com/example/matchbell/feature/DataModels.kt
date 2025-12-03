@@ -1,5 +1,7 @@
 package com.example.matchbell.feature
 
+import com.google.gson.annotations.SerializedName
+
 /**
  * 채팅방 목록에 표시될 각 채팅방의 데이터를 담는 모델입니다.
  */
@@ -146,13 +148,6 @@ data class MyCompatRequest(
     val birth: String   // "YYYY-MM-DD"
 )
 
-// [추가] 나만의 궁합 응답 모델 (점수 반환 가정)
-// 200 OK라고만 적혀있어서, 통상적으로 점수와 설명을 반환한다고 가정하고 작성합니다.
-data class MyCompatResponse(
-    val score: Int,
-    val description: String? // 궁합 설명 (없으면 null)
-)
-
 // [추가] 랭킹 아이템 모델
 data class RankingItem(
     val rank: Int,
@@ -167,4 +162,32 @@ data class RankingItem(
 // [추가] 랭킹 목록 응답 모델
 data class RankingListResponse(
     val items: List<RankingItem>
+)
+
+data class MyCompatResponse(
+    // 1. 점수 계산을 위한 원본 데이터 (서버가 이걸 줘야 함!)
+    @SerializedName("finalScore")
+    val finalScore: Double,
+
+    @SerializedName("stressScore")
+    val stressScore: Double,
+
+    // 2. 성향 데이터 (혹시 null로 오더라도 앱에서 처리 가능하게 Nullable로 선언)
+    // 서버가 "my_tendency"로 보내든 "myTendency"로 보내든 다 받기 위해 이름 강제 지정
+    @SerializedName("my_tendency", alternate = ["myTendency"])
+    val myTendency: String?,
+
+    @SerializedName("partner_tendency", alternate = ["partnerTendency"])
+    val partnerTendency: String?,
+
+    @SerializedName("description")
+    val description: String?
+)
+
+// [추가] 프로필 잠금 해제 응답 모델
+data class ProfileUnlockResponse(
+    val unlocked: Boolean,
+    val alreadyUnlocked: Boolean,
+    val cost: Int,
+    val balanceAfter: Int
 )

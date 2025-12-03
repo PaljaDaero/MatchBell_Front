@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#FFF0F5">
 
-    <!-- ======================= 1. 상단 메시지 바 (텍스트 업데이트) ======================= -->
+    <!-- ======================= 1. 상단 메시지 바 ======================= -->
     <ImageView
         android:id="@+id/message_bar"
         android:layout_width="375dp"
@@ -22,7 +22,7 @@
         android:id="@+id/tv_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="김명지님과 박마루님의 궁합 결과"
+        android:text="나와 상대방의 궁합 결과"
         android:textColor="@android:color/black"
         android:textSize="14sp"
         android:layout_marginStart="32dp"
@@ -48,7 +48,7 @@
         app:layout_constraintBottom_toBottomOf="@id/message_bar"
         app:layout_constraintStart_toEndOf="@id/tv_message" />
 
-    <!-- ======================= 2. 궁합 점수 및 결과 섹션 (새로 추가) ======================= -->
+    <!-- ======================= 2. 궁합 점수 및 결과 섹션 ======================= -->
 
     <!-- 점수 안내 텍스트 -->
     <TextView
@@ -58,12 +58,12 @@
         android:text="두 분의 궁합 점수는..."
         android:textSize="18sp"
         android:textColor="@android:color/black"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="50dp"
         app:layout_constraintTop_toBottomOf="@id/message_bar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- 점수 표시 카드 (92점) -->
+    <!-- 점수 표시 -->
     <TextView
         android:id="@+id/tv_score_card"
         android:layout_width="0dp"
@@ -77,48 +77,86 @@
         app:layout_constraintTop_toBottomOf="@id/tv_score_intro"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
-    <!-- 주: bg_score_card는 흰색 배경과 둥근 모서리, 연한 핑크색 테두리를 가진 Drawable이어야 합니다. -->
 
-    <!-- 궁합 설명 영역 (카드 형태) -->
+    <!-- [수정] 궁합 성향 영역 (라벨과 내용 분리) -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cl_description_area"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
         android:layout_marginTop="32dp"
         android:layout_marginBottom="32dp"
+        android:padding="40dp"
         android:background="@drawable/bg_border_box"
         app:layout_constraintTop_toBottomOf="@id/tv_score_card"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/btn_ranking" >
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- 궁합 설명 텍스트 (가운데 정렬) -->
+        <!-- 1. 나의 성향 라벨 -->
         <TextView
+            android:id="@+id/tv_label_my_tendency"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="궁합설명"
-            android:textSize="24sp"
+            android:text="김명지님의 성향:"
+            android:textSize="16sp"
+            android:textStyle="bold"
             android:textColor="@android:color/black"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- 1. 나의 성향 내용 -->
+        <TextView
+            android:id="@+id/tv_content_my_tendency"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="열정 에너지"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:layout_marginStart="12dp"
+            app:layout_constraintStart_toEndOf="@id/tv_label_my_tendency"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_label_my_tendency" />
+
+        <!-- 2. 상대 성향 라벨 -->
+        <TextView
+            android:id="@+id/tv_label_partner_tendency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="박마루님의 성향:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:layout_marginTop="20dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_content_my_tendency"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- 2. 상대 성향 내용 -->
+        <TextView
+            android:id="@+id/tv_content_partner_tendency"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="책임감 의리"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:layout_marginStart="12dp"
+            app:layout_constraintStart_toEndOf="@id/tv_label_partner_tendency"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_label_partner_tendency" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- 궁합 랭킹 보기 버튼 (기존 버튼 재활용 및 텍스트 변경) -->
-    <Button
+    <!-- 궁합 랭킹 보기 버튼 -->
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_ranking"
         android:layout_width="250dp"
         android:layout_height="56dp"
         android:text="궁합 랭킹 보기"
         android:textSize="18sp"
         android:textColor="@android:color/white"
-        android:textStyle="bold"
+        android:layout_marginBottom="50dp"
+        android:layout_marginTop="60dp"
         android:background="@drawable/bt_my"
-        android:layout_marginBottom="150dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cl_description_area"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

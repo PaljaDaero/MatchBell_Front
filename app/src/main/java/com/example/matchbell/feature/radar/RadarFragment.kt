@@ -58,7 +58,7 @@ class RadarFragment : Fragment() {
     private var _binding: FragmentRadarBinding? = null
     private val binding get() = _binding!!
 
-    // 애니메이션 객체들을 보관할 리스트
+    // Animation objects list
     private val animators = mutableListOf<ObjectAnimator>()
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -86,7 +86,7 @@ class RadarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // [확인사살] 뷰가 XML에서 alpha=0이었더라도 강제로 보이게 설정
+        // Ensure radar rings are visible
         binding.radarRing1.alpha = 1f
         binding.radarRing2.alpha = 1f
         binding.radarRing3.alpha = 1f
@@ -112,32 +112,27 @@ class RadarFragment : Fragment() {
     }
 
     private fun startPulseAnimation() {
-        stopPulseAnimation() // 기존 애니메이션 정리
+        stopPulseAnimation()
 
         if (_binding == null) return
 
-        // 속도 설정 (숫자를 작게 할수록 빨라짐)
-        val animDuration = 900L  // 1.5초 -> 0.9초로 단축
-        val interval = 100L      // 링 사이 간격도 500ms -> 300ms로 단축
+        val animDuration = 900L
+        val interval = 100L
 
-        // 헬퍼 함수
         fun createAnim(target: View, delay: Long): ObjectAnimator {
-            // alpha: 0.1(흐릿) <-> 0.7(진함) 반복
             return ObjectAnimator.ofFloat(target, "alpha", 0.1f, 0.7f).apply {
                 duration = animDuration
                 startDelay = delay
                 repeatCount = ValueAnimator.INFINITE
-                repeatMode = ValueAnimator.REVERSE // 켜졌다 꺼졌다 반복
-                interpolator = AccelerateDecelerateInterpolator() // 부드러운 가속도
+                repeatMode = ValueAnimator.REVERSE
+                interpolator = AccelerateDecelerateInterpolator()
             }
         }
 
-        // 3개의 링 생성 (0초, 0.3초, 0.6초 뒤 출발)
         val ani1 = createAnim(binding.radarRing1, 0)
         val ani2 = createAnim(binding.radarRing2, interval)
         val ani3 = createAnim(binding.radarRing3, interval * 2)
 
-        // 리스트에 추가 및 시작
         animators.add(ani1)
         animators.add(ani2)
         animators.add(ani3)
@@ -150,8 +145,6 @@ class RadarFragment : Fragment() {
         animators.clear()
     }
 
-    // --- (아래는 기존 위치/서버 로직 그대로 유지) ---
-
     private fun acquireLocationAndLoadRadar() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             startLocationUpdates()
@@ -162,14 +155,12 @@ class RadarFragment : Fragment() {
 
     @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(/* requestCode = */ requestCode, /* permissions = */
-            permissions, /* grantResults = */
-            grantResults)
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startLocationUpdates()
             } else {
-                Toast.makeText(context, "위치 권한 필요", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Location permission required", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -193,17 +184,25 @@ class RadarFragment : Fragment() {
         try {
             val addresses = geocoder.getFromLocation(lat, lng, 1)
             val region = if (!addresses.isNullOrEmpty()) {
-                addresses[0].locality ?: addresses[0].adminArea
+                // Prioritize locality (City/District), then adminArea (Province/State)
+                addresses[0].locality ?: addresses[0].adminArea ?: "Unknown Location"
             } else {
-                "서울"
+                "Unknown Location"
             }
+
+            // Map known English locations to Korean if necessary
             val finalRegion = when(region) {
                 "Mountain View" -> "마운틴 뷰"
                 "Seoul" -> "서울"
-                else -> region ?: "서울"
+                else -> region
             }
+
+            // Update UI with current location
+            binding.tvCurrentLocation.text = finalRegion
+
             updateLocationAndLoad(lat, lng, finalRegion)
         } catch (_: Exception) {
+            binding.tvCurrentLocation.text = "위치 확인 불가"
             updateLocationAndLoad(lat, lng, "서울")
         }
     }
@@ -272,19 +271,16 @@ class RadarFragment : Fragment() {
 
             val itemView = LayoutInflater.from(requireContext()).inflate(R.layout.item_radar_target, container, false)
             val tvScore = itemView.findViewById<TextView>(R.id.tv_score)
-            val tvClick = itemView.findViewById<TextView>(R.id.tv_click) // 반짝이는 배경
+            val tvClick = itemView.findViewById<TextView>(R.id.tv_click)
 
             tvScore.text = user.calculatedScore.toString()
 
-            // 아이템 반짝임 효과
             val itemBlink = blink.clone()
             itemBlink.target = tvClick
             itemBlink.start()
 
-            itemView.translationX = nx - cx // ConstraintLayout 중심 기준이면 좌표 조정 필요할 수 있음.
-            // 현재 XML 구조상 Container가 꽉 차있다면 translationX/Y는 Left/Top 기준임.
-            // 중심 기준으로 배치하려면 아래처럼 수정:
-            itemView.x = nx - (itemSize/2) // View의 왼쪽 상단 좌표
+            itemView.translationX = nx - cx
+            itemView.x = nx - (itemSize/2)
             itemView.y = ny - (itemSize/2)
 
             itemView.setOnClickListener {

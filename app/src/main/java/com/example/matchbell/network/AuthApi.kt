@@ -14,12 +14,12 @@ import com.example.matchbell.data.model.SignupRequest
 import com.example.matchbell.data.model.UserProfileResponse
 import com.example.matchbell.data.model.VerifyCodeRequest
 import com.example.matchbell.data.model.VerifyResponse
-import com.example.matchbell.feature.CookieSpendRequest
 import com.example.matchbell.feature.CuriousUserSummary
 import com.example.matchbell.feature.MatchProfileResponse
 import com.example.matchbell.feature.MatchSummary
 import com.example.matchbell.feature.MyCompatRequest
 import com.example.matchbell.feature.MyCompatResponse
+import com.example.matchbell.feature.ProfileUnlockResponse
 import com.example.matchbell.feature.RadarResponse
 import com.example.matchbell.feature.RankingListResponse
 import okhttp3.MultipartBody
@@ -166,12 +166,13 @@ interface AuthApi {
         @Path("targetUserId") targetUserId: Long
     ): Response<MatchProfileResponse>
 
-    // [추가] 쿠키 사용 (프로필 잠금 해제 등)
-    @POST("/me/cookie/spend")
-    suspend fun spendCookie(
+    // [수정] 프로필 잠금 해제 (쿠키 차감 포함)
+    // 기존 spendCookie 대신 이걸 사용하게 됩니다.
+    @POST("/me/matches/{targetUserId}/profile/unlock")
+    suspend fun unlockProfile(
         @Header("Authorization") token: String,
-        @Body request: CookieSpendRequest
-    ): Response<CookieBalanceResponse>
+        @Path("targetUserId") targetUserId: Long
+    ): Response<ProfileUnlockResponse>
 
     // ==========================================
     // 6. [추가] 나만의 궁합 & 랭킹

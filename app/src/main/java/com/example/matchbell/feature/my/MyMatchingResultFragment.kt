@@ -1,6 +1,7 @@
 package com.example.matchbell.feature.my
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,17 +27,28 @@ class MyMatchingResultFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. 데이터 받기 (Bundle)
+        // 1. 데이터 받기 (MyMatchingFragment에서 보낸 키값과 똑같아야 함)
         val partnerName = arguments?.getString("partnerName") ?: "상대방"
         val score = arguments?.getInt("score") ?: 0
-        // val desc = arguments?.getString("description") // 필요 시 사용
+
+        // [수정] 성향 정보 받기
+        val myTendency = arguments?.getString("myTendency") ?: "데이터 없음"
+        val partnerTendency = arguments?.getString("partnerTendency") ?: "데이터 없음"
+
+        Log.d("MatchingResult", "Received: $score / $myTendency / $partnerTendency")
 
         // 2. UI 업데이트
-        // 메시지: "XXX님과 XXX님의 궁합 결과" (내 이름은 로컬 저장소 등에서 가져와야 함, 일단 '나'로 표시하거나 생략)
         binding.tvMessage.text = "나와 ${partnerName}님의 궁합 결과"
-
-        // 점수 표시
         binding.tvScoreCard.text = "${score}점!"
+
+        // [수정] XML ID에 맞춰 텍스트 설정
+        // 나의 성향
+        binding.tvLabelMyTendency.text = "나의 성향:"
+        binding.tvContentMyTendency.text = myTendency
+
+        // 상대의 성향
+        binding.tvLabelPartnerTendency.text = "${partnerName}님의 성향:"
+        binding.tvContentPartnerTendency.text = partnerTendency
 
         // 3. 랭킹 버튼 리스너
         binding.btnRanking.setOnClickListener {

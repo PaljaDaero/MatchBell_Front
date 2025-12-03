@@ -7,7 +7,12 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.RadioGroup
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -147,7 +152,6 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
                     try {
                         findNavController().navigate(R.id.action_profileSetupFragment_to_permissionFragment)
                     } catch (e: Exception) {
-                        Toast.makeText(context, "경로 오류: NavGraph를 확인해주세요.", Toast.LENGTH_LONG).show()
                         e.printStackTrace()
                     }
                 } else {
