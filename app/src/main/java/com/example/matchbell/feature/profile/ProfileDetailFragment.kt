@@ -143,31 +143,32 @@ class ProfileDetailFragment : Fragment() {
         }
     }
 
+    // [수정됨] 변경된 데이터 모델에 맞춰 UI 업데이트 로직 수정
     private fun updateUI(response: MatchProfileResponse) {
         val basic = response.basic
-        val detail = response.detail
+        // val detail = response.detail // [삭제] 더 이상 존재하지 않음
 
+        // 1. 기본 정보 바인딩
         binding.tvMessage.text = "${basic.nickname}님의 상세 프로필"
         loadProfileImage(basic.avatarUrl)
         binding.tvRegionReal.text = basic.region ?: "지역 정보 없음"
 
         // ----------------------------------------------------------------
-        // [핵심 수정] 점수 재계산 로직
+        // [점수 계산] 이제 basic 안에 있는 compat을 사용합니다.
         // ----------------------------------------------------------------
-        val compat = detail?.compat
+        val compat = basic.compat // [수정] detail.compat -> basic.compat
 
-        // 1. API에서 점수 재료 꺼내기
         val finalS = compat?.finalScore ?: 0.0
         val stressS = compat?.stressScore ?: 0.0
 
-        // 2. 공식 적용하여 계산
+        // 점수 계산 (공식 적용)
         val calculatedScore = matchingScoreCalculator.calculateCompositeScore(finalS, stressS)
 
-        // 3. 점수 표시 (우선순위: 계산된 점수 > 리스트에서 가져온 점수 > 0)
+        // 점수 표시 로직 (계산된 점수 > 초기 점수 > 0)
         val finalDisplayScore = if (calculatedScore > 0) {
             calculatedScore
         } else if (initialScore > 0) {
-            initialScore // 상세 데이터가 없어서(잠금) 계산 못 했으면 가져온 점수라도 씀
+            initialScore
         } else {
             0
         }
@@ -178,15 +179,21 @@ class ProfileDetailFragment : Fragment() {
             binding.tvMatchBadge.text = "나와의 궁합 ?점"
         }
         binding.tvMatchBadge.visibility = View.VISIBLE
+
+        // ----------------------------------------------------------------
+        // [직업 & 자기소개 & 생년월일] 이제 basic에서 꺼냅니다.
         // ----------------------------------------------------------------
 
-        val introText = detail?.intro ?: basic.shortIntro ?: "소개가 없습니다."
+        // 자기소개 (intro가 없으면 shortIntro 사용)
+        val introText = basic.intro ?: basic.shortIntro ?: "소개가 없습니다."
         binding.textView.text = introText
 
-        val jobText = detail?.job ?: "직업 정보 없음"
+        // 직업
+        val jobText = basic.job ?: "직업 정보 없음"
         binding.tvJob.text = jobText
 
-        val fullBirth = detail?.birth
+        // 생년월일 (년도만 자르기)
+        val fullBirth = basic.birth
         if (!fullBirth.isNullOrEmpty() && fullBirth.length >= 4) {
             val year = fullBirth.substring(0, 4)
             binding.tvBirthReal.text = "${year}년생"
@@ -194,7 +201,7 @@ class ProfileDetailFragment : Fragment() {
             binding.tvBirthReal.text = "0000년생"
         }
 
-        // 잠금 여부 (결제 여부 기준)
+        // 잠금 상태 결정 (hasUnlocked 값에 따라 UI 변경)
         if (response.hasUnlocked) {
             unlockProfileUI()
         } else {

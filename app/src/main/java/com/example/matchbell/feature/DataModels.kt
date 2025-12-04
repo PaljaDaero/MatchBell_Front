@@ -108,10 +108,9 @@ data class CuriousUserSummary(
     val stressScore: Double? = 0.0
 )
 
-// [수정] 상세 프로필 응답 모델 (변경된 API 구조 반영)
+// [수정] 상세 프로필 응답 모델 (detail 제거)
 data class MatchProfileResponse(
     val basic: ProfileBasicInfo,
-    val detail: ProfileDetailInfo?, // 잠금 상태이거나 매칭 전이면 null일 수 있음
 
     val isSelf: Boolean,
     val isMatched: Boolean,
@@ -121,7 +120,7 @@ data class MatchProfileResponse(
     val canUnlock: Boolean
 )
 
-// [추가] 기본 프로필 정보 (항상 보임)
+// [수정] 기본 프로필 정보 (detail 내용이 여기로 통합됨)
 data class ProfileBasicInfo(
     val userId: Long,
     val nickname: String,
@@ -129,15 +128,14 @@ data class ProfileBasicInfo(
     val region: String,
     val avatarUrl: String?,
     val shortIntro: String?,
-    val tendency: String?
-)
+    val tendency: String?,
 
-// [추가] 상세 프로필 정보 (잠금 해제 시 보임)
-data class ProfileDetailInfo(
-    val intro: String?,
-    val job: String?,
+    // [추가] 기존 detail에 있던 정보들이 일로 이사왔습니다.
+    val gender: String?,
     val birth: String?,
-    val compat: CompatResult? // 궁합 점수 등
+    val job: String?,
+    val intro: String?,
+    val compat: CompatResult? // 궁합 점수 객체
 )
 
 // [추가] 상세 프로필 내 궁합 점수 데이터

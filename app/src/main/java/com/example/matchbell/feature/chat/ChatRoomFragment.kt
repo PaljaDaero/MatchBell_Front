@@ -22,7 +22,7 @@ import com.example.matchbell.R
 import com.example.matchbell.databinding.FragmentChatRoomBinding
 import com.example.matchbell.feature.ChatMessageResponse
 import com.example.matchbell.feature.ChatMessageSendRequest
-import com.example.matchbell.feature.MatchingScore // [중요] 점수 계산기 추가
+import com.example.matchbell.feature.MatchingScore
 import com.example.matchbell.feature.auth.TokenManager
 import com.example.matchbell.network.AuthApi
 import com.example.matchbell.network.ChatApi
@@ -37,6 +37,7 @@ import org.json.JSONObject
 import ua.naiksoftware.stomp.Stomp
 import ua.naiksoftware.stomp.StompClient
 import ua.naiksoftware.stomp.dto.LifecycleEvent
+import ua.naiksoftware.stomp.dto.StompHeader // [필수 Import] 헤더 클래스
 import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject
@@ -62,10 +63,8 @@ class ChatRoomFragment : Fragment() {
     private var otherUserName: String? = null
     private var otherProfileUrl: String? = null
 
-    // 상세 화면 전달용 점수
     private var loadedMatchScore: Int = 0
 
-    // [추가] 점수 계산기 인스턴스 생성
     private val matchingScoreCalculator = MatchingScore()
 
     private var myUserId: String = ""
@@ -137,19 +136,17 @@ class ChatRoomFragment : Fragment() {
         loadChatHistory()
         setupStompConnection(roomId)
 
-        // 궁합 점수 계산 및 로드
         loadMatchScore()
 
         btnHome.setOnClickListener { findNavController().popBackStack(R.id.chatListFragment, false) }
         btnReport.setOnClickListener { showReportDialog() }
 
-        // 더보기 버튼: 계산된 점수(loadedMatchScore)를 포함하여 전달
         btnMore.setOnClickListener {
             val bundle = Bundle().apply {
                 putLong("userId", otherUserId.toLongOrNull() ?: -1L)
                 putString("USER_NAME", otherUserName)
                 putString("PROFILE_URL", otherProfileUrl)
-                putInt("targetScore", loadedMatchScore) // 계산된 점수 전달
+                putInt("targetScore", loadedMatchScore)
             }
             findNavController().navigate(R.id.action_chatRoomFragment_to_profileDetailFragment, bundle)
         }
@@ -157,9 +154,6 @@ class ChatRoomFragment : Fragment() {
         btnSend.setOnClickListener { sendMessage() }
     }
 
-    /**
-     * [수정] MatchingScore 클래스를 사용하여 정확한 점수 계산
-     */
     private fun loadMatchScore() {
         val targetId = otherUserId.toLongOrNull()
         if (targetId == null || targetId == -1L) return
@@ -172,15 +166,17 @@ class ChatRoomFragment : Fragment() {
                 if (response.isSuccessful) {
                     val profile = response.body()
 
-                    // 1. 점수 재료 추출
-                    val compat = profile?.detail?.compat
+                    val compat = profile?.basic?.compat
+
                     val finalS = compat?.finalScore ?: 0.0
                     val stressS = compat?.stressScore ?: 0.0
 
-                    // 2. 계산기 돌리기
-                    val score = matchingScoreCalculator.calculateCompositeScore(finalS, stressS)
+                    val score = if (finalS == 0.0 && stressS == 0.0) {
+                        0
+                    } else {
+                        matchingScoreCalculator.calculateCompositeScore(finalS, stressS)
+                    }
 
-                    // 3. UI 및 변수 업데이트
                     loadedMatchScore = score
                     binding.tvMatchScore.text = "${score}점"
                 } else {
@@ -192,12 +188,23 @@ class ChatRoomFragment : Fragment() {
         }
     }
 
+    // ------------------------------------------------------------------------
+    // [수정] STOMP 연결 설정 (Header 방식 적용)
+    // ------------------------------------------------------------------------
     private fun setupStompConnection(roomId: String?) {
         if (roomId == null) return
         val token = context?.let { TokenManager.getAccessToken(it) } ?: ""
-        val wsUrl = "ws://3.239.45.21:8080/ws/websocket?token=$token"
+
+        // [수정 1] URL에서 토큰 제거 (?token= 부분 삭제)
+        // ws://3.239.45.21:8080/ws/websocket
+        val wsUrl = "ws://3.239.45.21:8080/ws/websocket"
 
         mStompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, wsUrl)
+
+        // [수정 2] 헤더 생성 (Authorization: Bearer <Token>)
+        val headerList = arrayListOf<StompHeader>()
+        headerList.add(StompHeader("Authorization", "Bearer $token"))
+
         val lifecycleDisp = mStompClient.lifecycle()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -226,21 +233,21 @@ class ChatRoomFragment : Fragment() {
                 } catch (e: Exception) { e.printStackTrace() }
             }, { })
         compositeDisposable.add(topicDisp)
-        mStompClient.connect()
+
+        // [수정 3] connect() 호출 시 헤더 리스트 전달
+        mStompClient.connect(headerList)
     }
 
     private fun sendMessage() {
         val content = etMessageInput.text.toString().trim()
         val matchIdLong = roomId?.toLongOrNull()
 
-        // 유효성 검사
         if (content.isEmpty() || matchIdLong == null) return
 
-        // 1. 내 화면에 먼저 보여주기 (UX) - 로컬 모델에는 senderId가 필요함 (내꺼니까 myUserId)
         val myMessage = Message(
             messageId = System.currentTimeMillis(),
             matchId = matchIdLong,
-            senderId = myUserId, // 로컬 표시용 (전송용 아님)
+            senderId = myUserId,
             content = content,
             timestamp = System.currentTimeMillis(),
             isMine = true
@@ -249,16 +256,13 @@ class ChatRoomFragment : Fragment() {
         etMessageInput.text.clear()
         rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
 
-        // 2. 서버로 전송 (SEND) -> /app/chat.send
-        // [핵심 수정] 명세서대로 matchId와 content만 보냅니다. senderId 제거!
         val sendRequest = ChatMessageSendRequest(
             matchId = matchIdLong,
             content = content
         )
 
         val jsonContent = gson.toJson(sendRequest)
-
-        Log.d("STOMP", "Sending: $jsonContent") // 로그 확인: {"matchId":3,"content":"..."} 라고 떠야 함
+        Log.d("STOMP", "Sending: $jsonContent")
 
         val sendDisp = mStompClient.send("/app/chat.send", jsonContent)
             .subscribeOn(Schedulers.io())
