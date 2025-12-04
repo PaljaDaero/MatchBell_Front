@@ -14,12 +14,6 @@ data class ChatMessageResponse(
     val status: String   // 메시지 상태 (예: "READ", "SENT")
 )
 
-// [추가] 메시지 전송 요청 시 사용할 모델 (STOMP Destination /app/chat.send Body)
-data class ChatMessageSendRequest(
-    val matchId: Long,
-    val content: String
-)
-
 // [추가] 내 채팅방 목록 조회 API의 응답 모델
 data class ChatRoomListResponse(
     val matchId: Long,
@@ -87,15 +81,7 @@ data class MyLocationData(
     val region: String
 )
 
-// [추가] 궁금해요 (보냄/받음) 유저 요약 정보
-data class CuriousUserSummary(
-    val userId: Long,
-    val nickname: String,
-    val avatarUrl: String?,
-    val createdAt: String
-)
-
-// [추가] 매칭된 유저 정보
+// [수정] 매칭된 유저 정보
 data class MatchSummary(
     val userId: Long,
     val nickname: String,
@@ -103,7 +89,23 @@ data class MatchSummary(
     val age: Int,
     val region: String,
     val job: String,
-    val matchedAt: String
+    val matchedAt: String,
+
+    // [추가] 레이더 공식 적용을 위한 원본 점수들
+    val finalScore: Double? = 0.0,
+    val stressScore: Double? = 0.0
+)
+
+// [수정] 궁금해요 유저 요약 정보
+data class CuriousUserSummary(
+    val userId: Long,
+    val nickname: String,
+    val avatarUrl: String?,
+    val createdAt: String,
+
+    // [추가] 여기도 똑같이 추가
+    val finalScore: Double? = 0.0,
+    val stressScore: Double? = 0.0
 )
 
 // [수정] 상세 프로필 응답 모델 (변경된 API 구조 반영)
@@ -210,4 +212,9 @@ data class ProfileUnlockResponse(
     val alreadyUnlocked: Boolean,
     val cost: Int,
     val balanceAfter: Int
+)
+
+data class ChatMessageSendRequest(
+    val matchId: Long,
+    val content: String
 )

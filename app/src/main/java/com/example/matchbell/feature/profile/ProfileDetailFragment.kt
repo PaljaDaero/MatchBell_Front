@@ -1,19 +1,19 @@
 package com.example.matchbell.feature.profile
 
-// CookieSpendDialogFragment 패키지 확인 필요 (com.example.matchbell.feature.profile 인지 com.example.matchbell 인지)
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.example.matchbell.R
 import com.example.matchbell.databinding.FragmentProfileDetailBinding
 import com.example.matchbell.feature.MatchProfileResponse
+import com.example.matchbell.feature.MatchingScore
 import com.example.matchbell.feature.auth.TokenManager
 import com.example.matchbell.network.AuthApi
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,48 +29,72 @@ class ProfileDetailFragment : Fragment() {
     private var _binding: FragmentProfileDetailBinding? = null
     private val binding get() = _binding!!
 
-    private var isUnlocked = false
+    // [추가] 점수 계산기
+    private val matchingScoreCalculator = MatchingScore()
+
+    // [추가] 이전 화면에서 넘겨준 점수 저장용 (API 데이터 없을 때 백업용)
+    private var initialScore: Int = 0
+
     private var targetUserId: Long = -1L
 
-    // [수정] isMatched는 더 이상 '진입 차단'용이 아니라, '잠금 해제 가능 여부' 판단용이 될 수 있음
-    // 하지만 API 자체가 "매칭된 유저만" 해제 가능하다면 API가 알아서 에러를 줄 것입니다.
-    private var isMatched = false
+    private val BASE_URL = "http://3.239.45.21:8080"
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentProfileDetailBinding.inflate(inflater, container, false)
+        // 로딩 레이아웃 초기화 (숨김)
+        showLoading(false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. 기본 정보 받기 (Radar에서 넘겨준 값)
         val args = arguments
-        targetUserId = args?.getLong("targetUserId") ?: -1L
-        val basicName = args?.getString("targetName") ?: "알 수 없음"
-        val basicScore = args?.getInt("targetScore") ?: 0
-        val basicRegion = args?.getString("targetRegion") ?: ""
+        var basicName = "알 수 없음"
+        var basicRegion = ""
+        var basicProfileUrl: String? = null
+
+        if (args != null) {
+            val idFromChat = args.getLong("userId", -1L)
+            targetUserId = if (idFromChat != -1L) idFromChat else args.getLong("targetUserId", -1L)
+
+            basicName = args.getString("targetName") ?: args.getString("USER_NAME") ?: "알 수 없음"
+            basicRegion = args.getString("targetRegion") ?: ""
+            basicProfileUrl = args.getString("PROFILE_URL")
+
+            // [중요] 리스트에서 이미 계산해서 넘겨준 점수를 저장
+            initialScore = args.getInt("targetScore", 0)
+        }
 
         if (targetUserId == -1L) {
+            Toast.makeText(context, "유저 정보를 불러올 수 없습니다.", Toast.LENGTH_SHORT).show()
             findNavController().popBackStack()
             return
         }
 
-        // 2. 기본 UI 세팅 (API 로드 전)
+        // 1. 기본 정보 즉시 표시
         binding.tvMessage.text = "${basicName}님의 상세 프로필"
-        binding.tvMatchBadge.text = "나와의 궁합 ${basicScore}점!"
-        binding.tvRegionReal.text = basicRegion
-        binding.textView.text = "자기소개 정보가 없습니다." // 기본값
-        binding.tvJob.text = "정보 없음"
-        binding.tvBirthReal.text = "0000.00.00"
 
-        // 3. 초기 잠금
+        // [점수 표시] 초기 점수 우선 표시
+        if (initialScore > 0) {
+            binding.tvMatchBadge.text = "나와의 궁합 ${initialScore}점!"
+            binding.tvMatchBadge.visibility = View.VISIBLE
+        } else {
+            // 점수가 없어도 배지는 보이게 (혹은 "궁합 ?점")
+            binding.tvMatchBadge.text = "나와의 궁합 ?점"
+            binding.tvMatchBadge.visibility = View.VISIBLE
+        }
+
+        loadProfileImage(basicProfileUrl)
+        if (basicRegion.isNotEmpty()) binding.tvRegionReal.text = basicRegion
+
+        // 2. 초기화: 잠금 상태 적용
         lockProfileUI()
 
-        // 4. 상세 데이터 로드 (매칭 안 됐으면 403 뜰 수 있음 -> 그래도 화면은 유지)
+        // 3. 데이터 로드
         loadProfileData()
 
         val lockClickListener = View.OnClickListener { handleLockClick() }
@@ -79,147 +103,189 @@ class ProfileDetailFragment : Fragment() {
         binding.ivLockBirth.setOnClickListener(lockClickListener)
     }
 
+    // 로딩창 제어
+    private fun showLoading(isLoading: Boolean) {
+        if (_binding == null) return
+        binding.flLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+
+    private fun loadProfileImage(url: String?) {
+        if (!url.isNullOrEmpty()) {
+            val fullUrl = if (url.startsWith("http")) url else "$BASE_URL$url"
+            Glide.with(this)
+                .load(fullUrl)
+                .placeholder(R.drawable.bg_profile_image)
+                .error(R.drawable.bg_profile_image)
+                .into(binding.ivProfileReal)
+        } else {
+            binding.ivProfileReal.setImageResource(R.drawable.bg_profile_image)
+        }
+    }
+
     private fun loadProfileData() {
         val token = context?.let { TokenManager.getAccessToken(it) } ?: return
+        showLoading(true)
 
         lifecycleScope.launch {
             try {
                 val response = authApi.getMatchProfile("Bearer $token", targetUserId)
-
                 if (response.isSuccessful) {
                     val profile = response.body()
                     if (profile != null) {
-                        isMatched = true // 성공 = 매칭됨
                         updateUI(profile)
                     }
-                } else {
-                    // 403 등 에러가 나도 '기본 정보'는 이미 뿌려져 있으므로 괜찮음
-                    Log.d("ProfileDetail", "Load failed: ${response.code()} (Not matched yet?)")
                 }
             } catch (e: Exception) {
                 Log.e("ProfileDetail", "Network Error", e)
+            } finally {
+                showLoading(false)
             }
         }
     }
 
-    // 서버 응답 데이터 바인딩 함수 수정
     private fun updateUI(response: MatchProfileResponse) {
         val basic = response.basic
         val detail = response.detail
 
-        // 1. 기본 정보 (Basic) - 항상 표시
         binding.tvMessage.text = "${basic.nickname}님의 상세 프로필"
+        loadProfileImage(basic.avatarUrl)
+        binding.tvRegionReal.text = basic.region ?: "지역 정보 없음"
 
-        // 궁합 점수는 detail에 있을 수도 있고, 계산해야 할 수도 있음.
-        // 일단 detail이 없으면 0점 처리 혹은 radar에서 가져온 값 유지
-        val score = detail?.compat?.finalScore?.toInt() ?: 0 // (Radar에서 넘겨받은 값을 쓰는 게 더 나을 수 있음)
-        binding.tvMatchBadge.text = "나와의 궁합 ${score}점!"
+        // ----------------------------------------------------------------
+        // [핵심 수정] 점수 재계산 로직
+        // ----------------------------------------------------------------
+        val compat = detail?.compat
 
-        binding.tvRegionReal.text = basic.region
+        // 1. API에서 점수 재료 꺼내기
+        val finalS = compat?.finalScore ?: 0.0
+        val stressS = compat?.stressScore ?: 0.0
 
-        // 2. 상세 정보 (Detail) - null이면 잠금 상태
-        if (detail != null) {
-            binding.textView.text = detail.intro ?: basic.shortIntro ?: "소개가 없습니다."
-            binding.tvJob.text = detail.job ?: "정보 없음"
-            binding.tvBirthReal.text = detail.birth ?: "0000.00.00"
+        // 2. 공식 적용하여 계산
+        val calculatedScore = matchingScoreCalculator.calculateCompositeScore(finalS, stressS)
 
-            // 이미 풀려있는 상태라면 UI도 해제
-            if (response.hasUnlocked) {
-                unlockProfileUI()
-            }
+        // 3. 점수 표시 (우선순위: 계산된 점수 > 리스트에서 가져온 점수 > 0)
+        val finalDisplayScore = if (calculatedScore > 0) {
+            calculatedScore
+        } else if (initialScore > 0) {
+            initialScore // 상세 데이터가 없어서(잠금) 계산 못 했으면 가져온 점수라도 씀
         } else {
-            // 상세 정보가 없으면 (잠금 상태) 기본 멘트
-            binding.textView.text = basic.shortIntro ?: "잠금된 프로필입니다."
-            binding.tvJob.text = "잠금 상태"
+            0
         }
 
-        // 3. 상태값 업데이트 (서버가 알려준 값 사용)
-        isMatched = response.isMatched
-        // isUnlocked = response.hasUnlocked // (필요 시 로컬 변수 동기화)
+        if (finalDisplayScore > 0) {
+            binding.tvMatchBadge.text = "나와의 궁합 ${finalDisplayScore}점!"
+        } else {
+            binding.tvMatchBadge.text = "나와의 궁합 ?점"
+        }
+        binding.tvMatchBadge.visibility = View.VISIBLE
+        // ----------------------------------------------------------------
 
-        // 4. 이미지 로드
-        if (!basic.avatarUrl.isNullOrEmpty()) {
-            Glide.with(this).load(basic.avatarUrl).into(binding.ivProfileReal)
+        val introText = detail?.intro ?: basic.shortIntro ?: "소개가 없습니다."
+        binding.textView.text = introText
+
+        val jobText = detail?.job ?: "직업 정보 없음"
+        binding.tvJob.text = jobText
+
+        val fullBirth = detail?.birth
+        if (!fullBirth.isNullOrEmpty() && fullBirth.length >= 4) {
+            val year = fullBirth.substring(0, 4)
+            binding.tvBirthReal.text = "${year}년생"
+        } else {
+            binding.tvBirthReal.text = "0000년생"
+        }
+
+        // 잠금 여부 (결제 여부 기준)
+        if (response.hasUnlocked) {
+            unlockProfileUI()
+        } else {
+            lockProfileUI()
         }
     }
 
     private fun handleLockClick() {
-        if (isUnlocked) return
-
-        // 쿠키 사용 팝업 띄우기
-        // [중요] 팝업의 '확인' 버튼을 누르면 -> requestProfileUnlock() 호출
-        val dialog = CookieSpendDialogFragment(
-            onConfirm = {
-                requestProfileUnlock()
-            }
-        )
+        val dialog = CookieSpendDialogFragment(onConfirm = { requestProfileUnlock() })
         dialog.show(parentFragmentManager, "CookieSpendDialog")
     }
 
-    // [핵심] 실제 잠금 해제 API 호출
     private fun requestProfileUnlock() {
         val token = context?.let { TokenManager.getAccessToken(it) } ?: return
+        showLoading(true)
 
         lifecycleScope.launch {
             try {
-                // 새로 만든 API 호출 (/me/matches/{id}/profile/unlock)
                 val response = authApi.unlockProfile("Bearer $token", targetUserId)
-
                 if (response.isSuccessful) {
                     val result = response.body()
-                    Toast.makeText(context, "잠금 해제! (남은 쿠키: ${result?.balanceAfter})", Toast.LENGTH_SHORT).show()
-
-                    // UI 잠금 해제
-                    unlockProfileUI()
-
-                    // 해제 후엔 데이터를 다시 로드해서 확실하게 보여주는 것이 좋음
+                    Toast.makeText(context, "잠금 해제 완료!", Toast.LENGTH_SHORT).show()
                     loadProfileData()
                 } else {
-                    val errorMsg = response.errorBody()?.string() ?: ""
-                    if (response.code() == 403) {
-                        Toast.makeText(context, "아직 매칭 상태가 아닙니다.", Toast.LENGTH_LONG).show()
-                    } else if (response.code() == 400) {
-                        Toast.makeText(context, "쿠키가 부족합니다.", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(context, "잠금 해제 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
-                    }
+                    Toast.makeText(context, if (response.code() == 400) "쿠키 부족" else "실패", Toast.LENGTH_SHORT).show()
+                    showLoading(false)
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "네트워크 오류", Toast.LENGTH_SHORT).show()
+                showLoading(false)
             }
         }
     }
 
+    // --- ConstraintSet을 이용한 안전한 잠금 UI ---
+
     private fun lockProfileUI() {
-        isUnlocked = false
         binding.ivLockOverlay.visibility = View.VISIBLE
+        binding.ivProfileReal.visibility = View.INVISIBLE
+
+        binding.textView.visibility = View.VISIBLE
+        binding.tvJob.visibility = View.VISIBLE
+        binding.labelJob.visibility = View.VISIBLE
+
         binding.ivLockRegion.visibility = View.VISIBLE
-        binding.ivLockBirth.visibility = View.VISIBLE
-        binding.ivProfileReal.visibility = View.GONE
         binding.tvRegionReal.visibility = View.GONE
+
+        binding.ivLockBirth.visibility = View.VISIBLE
         binding.tvBirthReal.visibility = View.GONE
+
+        updateConstraints(isLocked = true)
     }
 
     private fun unlockProfileUI() {
-        isUnlocked = true
         binding.ivLockOverlay.visibility = View.GONE
         binding.ivProfileReal.visibility = View.VISIBLE
+
+        binding.textView.visibility = View.VISIBLE
+        binding.tvJob.visibility = View.VISIBLE
+        binding.labelJob.visibility = View.VISIBLE
+
         binding.ivLockRegion.visibility = View.GONE
         binding.tvRegionReal.visibility = View.VISIBLE
+
         binding.ivLockBirth.visibility = View.GONE
         binding.tvBirthReal.visibility = View.VISIBLE
-        updateConstraints()
+
+        updateConstraints(isLocked = false)
     }
 
-    private fun updateConstraints() {
-        val paramsBirth = binding.labelBirth.layoutParams as ConstraintLayout.LayoutParams
-        paramsBirth.topToBottom = binding.tvRegionReal.id
-        binding.labelBirth.layoutParams = paramsBirth
+    private fun updateConstraints(isLocked: Boolean) {
+        val constraintSet = androidx.constraintlayout.widget.ConstraintSet()
 
-        val paramsJob = binding.labelJob.layoutParams as ConstraintLayout.LayoutParams
-        paramsJob.topToBottom = binding.tvBirthReal.id
-        binding.labelJob.layoutParams = paramsJob
-        binding.root.requestLayout()
+        // [핵심 수정] binding.root가 아니라 내부의 clContent를 복제해야 합니다!
+        constraintSet.clone(binding.clContent)
+
+        if (isLocked) {
+            // [잠금 상태]
+            // 생년월일 라벨 -> 지역 자물쇠(ivLockRegion) 밑으로
+            constraintSet.connect(binding.labelBirth.id, androidx.constraintlayout.widget.ConstraintSet.TOP, binding.ivLockRegion.id, androidx.constraintlayout.widget.ConstraintSet.BOTTOM)
+            // 직업 라벨 -> 생년월일 자물쇠(ivLockBirth) 밑으로
+            constraintSet.connect(binding.labelJob.id, androidx.constraintlayout.widget.ConstraintSet.TOP, binding.ivLockBirth.id, androidx.constraintlayout.widget.ConstraintSet.BOTTOM)
+        } else {
+            // [해제 상태]
+            // 생년월일 라벨 -> 지역 텍스트(tvRegionReal) 밑으로
+            constraintSet.connect(binding.labelBirth.id, androidx.constraintlayout.widget.ConstraintSet.TOP, binding.tvRegionReal.id, androidx.constraintlayout.widget.ConstraintSet.BOTTOM)
+            // 직업 라벨 -> 생년월일 텍스트(tvBirthReal) 밑으로
+            constraintSet.connect(binding.labelJob.id, androidx.constraintlayout.widget.ConstraintSet.TOP, binding.tvBirthReal.id, androidx.constraintlayout.widget.ConstraintSet.BOTTOM)
+        }
+
+        // [핵심 수정] 변경 사항을 clContent에 적용
+        constraintSet.applyTo(binding.clContent)
     }
 
     override fun onDestroyView() {

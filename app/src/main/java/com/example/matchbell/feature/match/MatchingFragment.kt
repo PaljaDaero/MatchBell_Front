@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.matchbell.R
 import com.example.matchbell.databinding.FragmentMatchingBinding
+import com.example.matchbell.feature.MatchingScore // [중요] 레이더 점수 계산기
 import com.example.matchbell.feature.auth.TokenManager
 import com.example.matchbell.network.AuthApi
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,7 +23,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// UI 표시를 위한 통합 데이터 모델
 data class MatchUiItem(
     val userId: Long,
     val nickname: String,
@@ -40,6 +40,9 @@ class MatchingFragment : Fragment() {
 
     @Inject
     lateinit var authApi: AuthApi
+
+    // [추가] 레이더와 똑같은 점수 계산기 장착!
+    private val matchingScoreCalculator = MatchingScore()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -64,6 +67,7 @@ class MatchingFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                // 3가지 API 동시 호출
                 val sentDeferred = async { authApi.getSentCurious(headerToken) }
                 val receivedDeferred = async { authApi.getReceivedCurious(headerToken) }
                 val matchesDeferred = async { authApi.getMatches(headerToken) }
@@ -74,15 +78,20 @@ class MatchingFragment : Fragment() {
 
                 val uiList = mutableListOf<MatchUiItem>()
 
-                // (1) 매칭 완료
+                // (1) 매칭 완료 목록
                 if (matchesResponse.isSuccessful) {
                     matchesResponse.body()?.forEach { match ->
+                        // [핵심] 레이더 공식으로 점수 계산
+                        val finalS = match.finalScore ?: 0.0
+                        val stressS = match.stressScore ?: 0.0
+                        val realScore = matchingScoreCalculator.calculateCompositeScore(finalS, stressS)
+
                         uiList.add(
                             MatchUiItem(
                                 userId = match.userId,
                                 nickname = match.nickname,
                                 infoText = "${match.region} | ${match.job}",
-                                score = 0,
+                                score = realScore, // 계산된 점수 입력
                                 isMatched = true,
                                 avatarUrl = match.avatarUrl
                             )
@@ -90,15 +99,19 @@ class MatchingFragment : Fragment() {
                     }
                 }
 
-                // (2) 받은 궁금해요
+                // (2) 받은 궁금해요 목록
                 if (receivedResponse.isSuccessful) {
                     receivedResponse.body()?.forEach { curious ->
+                        val finalS = curious.finalScore ?: 0.0
+                        val stressS = curious.stressScore ?: 0.0
+                        val realScore = matchingScoreCalculator.calculateCompositeScore(finalS, stressS)
+
                         uiList.add(
                             MatchUiItem(
                                 userId = curious.userId,
                                 nickname = curious.nickname,
                                 infoText = "나에게 궁금해요를 보냄",
-                                score = 0,
+                                score = realScore, // 계산된 점수 입력
                                 isMatched = false,
                                 avatarUrl = curious.avatarUrl
                             )
@@ -106,15 +119,19 @@ class MatchingFragment : Fragment() {
                     }
                 }
 
-                // (3) 보낸 궁금해요
+                // (3) 보낸 궁금해요 목록
                 if (sentResponse.isSuccessful) {
                     sentResponse.body()?.forEach { curious ->
+                        val finalS = curious.finalScore ?: 0.0
+                        val stressS = curious.stressScore ?: 0.0
+                        val realScore = matchingScoreCalculator.calculateCompositeScore(finalS, stressS)
+
                         uiList.add(
                             MatchUiItem(
                                 userId = curious.userId,
                                 nickname = curious.nickname,
                                 infoText = "내가 궁금해요를 보냄",
-                                score = 0,
+                                score = realScore, // 계산된 점수 입력
                                 isMatched = false,
                                 avatarUrl = curious.avatarUrl
                             )
@@ -125,8 +142,7 @@ class MatchingFragment : Fragment() {
                 addMatchItems(uiList)
 
             } catch (e: Exception) {
-                Log.e("MatchingFragment", "Error loading matching data", e)
-                Toast.makeText(context, "데이터를 불러오는 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                Log.e("MatchingFragment", "Error loading data", e)
             }
         }
     }
@@ -141,7 +157,7 @@ class MatchingFragment : Fragment() {
         users.forEach { user ->
             val itemView = inflater.inflate(R.layout.item_matching_list, container, false)
 
-            // 1. 텍스트 데이터 바인딩
+            // 점수 표시 (0점이면 ? 표시)
             if (user.score > 0) {
                 itemView.findViewById<TextView>(R.id.tv_score_value).text = " ${user.score}점"
             } else {
@@ -150,25 +166,23 @@ class MatchingFragment : Fragment() {
 
             itemView.findViewById<TextView>(R.id.tv_affiliation).text = "${user.nickname}\n${user.infoText}"
 
-            // 2. [수정] 잠금 버튼 클릭 시 상세 페이지로 이동 (데이터 전달 포함)
+            // 자물쇠(상세보기) 버튼
             val btnLockProfile = itemView.findViewById<ImageButton>(R.id.btn_lock)
             btnLockProfile.setOnClickListener {
-                // ProfileDetailFragment에서 받을 데이터를 Bundle에 담습니다.
                 val bundle = Bundle().apply {
-                    putLong("targetUserId", user.userId) // [필수] ID
+                    putLong("targetUserId", user.userId)
                     putString("targetName", user.nickname)
-                    putString("targetRegion", user.infoText) // 임시로 infoText를 넘김
-                    putInt("targetScore", user.score)
+                    putString("targetRegion", user.infoText)
+                    putInt("targetScore", user.score) // 여기서 계산된 점수를 넘겨줍니다!
+                    putString("PROFILE_URL", user.avatarUrl) // 사진 URL도 전달
                 }
-
-                // 네비게이션 이동 (Bundle 전달)
                 findNavController().navigate(
                     R.id.action_matchingFragment_to_profileDetailFragment,
                     bundle
                 )
             }
 
-            // 3. 하트 상태 처리
+            // 하트 아이콘 설정
             val tvLikeText = itemView.findViewById<TextView>(R.id.tv_like_text)
             val ivHeartIcon = itemView.findViewById<ImageView>(R.id.iv_heart_icon)
 

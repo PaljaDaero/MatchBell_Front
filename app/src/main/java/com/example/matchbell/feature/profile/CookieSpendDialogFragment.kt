@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class CookieSpendDialogFragment(
-    private val onConfirm: () -> Unit // [수정] 확인 버튼 눌렀을 때 실행할 함수
+    private val onConfirm: () -> Unit
 ) : DialogFragment() {
 
     @Inject
@@ -33,26 +33,49 @@ class CookieSpendDialogFragment(
         savedInstanceState: Bundle?
     ): View {
         _binding = DialogCookieSpendBinding.inflate(inflater, container, false)
+        // 배경을 투명하게 (둥근 모서리 적용을 위해)
         dialog?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        // [중요] Fragment 속성으로 취소 방지
+        isCancelable = false
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. 내 쿠키 잔액 조회 (단순 표시용)
+        // 1. 내 쿠키 잔액 조회
         loadMyCookieBalance()
 
-        // 2. 닫기
+        // 2. 취소 버튼 (닫기)
         binding.btnCancel.setOnClickListener {
             dismiss()
         }
 
-        // 3. 확인 (쿠키 사용)
+        // 3. 사용 버튼 (확인)
         binding.btnConfirm.setOnClickListener {
-            // [수정] 여기서 API 호출 안 함! 부모에게 위임
-            onConfirm()
             dismiss()
+            onConfirm()
+        }
+    }
+
+    /**
+     * [핵심 해결책] onStart에서 다이얼로그 속성을 강제 설정
+     * 화면에 나타나는 시점에 물리적으로 터치를 막아버립니다.
+     */
+    override fun onStart() {
+        super.onStart()
+        dialog?.let {
+            // 1. 뒤로가기 버튼 무시
+            it.setCancelable(false)
+
+            // 2. 바깥 영역 터치 무시
+            it.setCanceledOnTouchOutside(false)
+
+            // 3. 다이얼로그 크기 설정 (가로 90%)
+            val params = it.window?.attributes
+            params?.width = (resources.displayMetrics.widthPixels * 0.9).toInt()
+            params?.height = WindowManager.LayoutParams.WRAP_CONTENT
+            it.window?.attributes = params
         }
     }
 
@@ -72,14 +95,6 @@ class CookieSpendDialogFragment(
                 binding.tvCookieCount.text = "-"
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val params: WindowManager.LayoutParams? = dialog?.window?.attributes
-        params?.width = (resources.displayMetrics.widthPixels * 0.9).toInt()
-        params?.height = WindowManager.LayoutParams.WRAP_CONTENT
-        dialog?.window?.attributes = params
     }
 
     override fun onDestroyView() {

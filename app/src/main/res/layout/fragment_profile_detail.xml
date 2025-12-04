@@ -20,7 +20,7 @@
         android:id="@+id/tv_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="으누사마님의 상세 프로필"
+        android:text=""
         android:textColor="@android:color/black"
         android:textSize="14sp"
         android:layout_marginStart="32dp"
@@ -45,25 +45,24 @@
         app:layout_constraintBottom_toBottomOf="@id/message_bar"
         app:layout_constraintStart_toEndOf="@id/tv_message" />
 
-
-    <!-- 상세 내용 스크롤 -->
     <ScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@id/message_bar"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="24dp">
 
-            <!-- 궁합 점수 -->
             <TextView
                 android:id="@+id/tv_match_badge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="나와의 궁합 92점!"
+                android:text="로딩 중..."
                 android:textColor="#FFFFFF"
                 android:textStyle="bold"
                 android:background="#EF4444"
@@ -74,7 +73,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- 프로필 사진 (클릭 이벤트 대상) -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cv_profile_image"
                 android:layout_width="120dp"
@@ -104,7 +102,6 @@
                     android:visibility="gone" />
             </androidx.cardview.widget.CardView>
 
-            <!-- 자기소개 -->
             <TextView
                 android:id="@+id/label_intro"
                 android:layout_width="wrap_content"
@@ -122,12 +119,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="안녕하세요 잘 부탁드립니다!\n운명을 찾고 있습니다."
+                android:text=""
                 android:textColor="#333333"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/label_intro" />
 
-            <!-- 지역 (숨김/보임) -->
             <TextView
                 android:id="@+id/label_region"
                 android:layout_width="wrap_content"
@@ -161,12 +157,11 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/label_region" />
 
-            <!-- 생년월일 (숨김/보임) -->
             <TextView
                 android:id="@+id/label_birth"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="생년월일"
+                android:text="태어난 연도"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="#000000"
@@ -195,7 +190,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/label_birth" />
 
-            <!-- 직업 -->
             <TextView
                 android:id="@+id/label_job"
                 android:layout_width="wrap_content"
@@ -212,7 +206,7 @@
                 android:id="@+id/tv_job"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="학생 (명지대학교 뮤지컬과)"
+                android:text=""
                 android:textColor="#333333"
                 android:layout_marginTop="8dp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -220,4 +214,26 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/fl_loading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#4D000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone"
+        android:elevation="20dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="#FFFFFF" />
+    </FrameLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
