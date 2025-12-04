@@ -161,7 +161,14 @@ class MyMatchingFragment : Fragment() {
                         findNavController().navigate(R.id.action_my_matching_result, bundle)
                     }
                 } else {
-                    Toast.makeText(context, "분석 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    // [핵심 수정] 401 응답 코드를 확인하여 토큰 만료 처리
+                    if (response.code() == 401) {
+                        context?.let { ctx ->
+                            TokenManager.handleTokenExpired(ctx, findNavController())
+                        }
+                    } else {
+                        Toast.makeText(context, "분석 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("MyMatching", "Error", e)
