@@ -1,6 +1,5 @@
 package com.example.matchbell.feature.auth
 
-import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -57,7 +56,6 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
         val nicknameInput = view.findViewById<EditText>(R.id.et_nickname)
         // val bioInput = view.findViewById<EditText>(R.id.et_bio) // 삭제됨
         val birthDateTextView = view.findViewById<TextView>(R.id.tv_birth_value)
-        val regionTextView = view.findViewById<TextView>(R.id.tv_region_value)
         val jobInput = view.findViewById<EditText>(R.id.et_job)
         val btnFinish = view.findViewById<Button>(R.id.btn_finish_signup)
         val rgGender = view.findViewById<RadioGroup>(R.id.rg_gender)
@@ -82,14 +80,6 @@ class ProfileSetupFragment : Fragment(R.layout.fragment_profile_setup) {
             datePickerDialog.datePicker.minDate = minDate
             datePickerDialog.datePicker.maxDate = maxDate
             datePickerDialog.show()
-        }
-
-        // 지역 선택
-        regionTextView.setOnClickListener {
-            val regions = arrayOf("서울특별시", "경기도", "인천광역시", "부산광역시", "대구광역시", "광주광역시", "대전광역시")
-            AlertDialog.Builder(requireContext())
-                .setItems(regions) { _, which -> regionTextView.text = regions[which] }
-                .show()
         }
 
         // [확인] 버튼 클릭

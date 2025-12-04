@@ -46,43 +46,6 @@
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true"/>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#F0F0F0"/>
-
-        <TextView
-            android:id="@+id/btn_pw_change"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="비밀번호 변경"
-            android:textSize="16sp"
-            android:textColor="#333333"
-            android:paddingVertical="16dp"
-            android:drawableEnd="@drawable/ic_arrow_right"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#F0F0F0"/>
-
-        <TextView
-            android:id="@+id/btn_notification"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="푸시 알림 설정"
-            android:textSize="16sp"
-            android:textColor="#333333"
-            android:paddingVertical="16dp"
-            android:drawableEnd="@drawable/ic_arrow_right"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"/>
     </LinearLayout>
 
     <TextView

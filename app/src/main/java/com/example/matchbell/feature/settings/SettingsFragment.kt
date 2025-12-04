@@ -28,10 +28,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             // 아까 뚫어놓은 길(action)로 이동!
             findNavController().navigate(R.id.action_settingsFragment_to_profileEditFragment)
         }
-        // [추가] 푸시 알림 설정 버튼 클릭
-        binding.btnNotification.setOnClickListener {
-            findNavController().navigate(R.id.action_settingsFragment_to_notificationSettingsFragment)
-        }
+
         // [추가] 버전 정보 버튼 클릭
         binding.btnVersion.setOnClickListener {
             findNavController().navigate(R.id.action_settingsFragment_to_versionInfoFragment)
