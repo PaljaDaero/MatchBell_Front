@@ -16,16 +16,23 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide // [추가] Glide import
+import com.bumptech.glide.Glide
 import com.example.matchbell.R
 import com.example.matchbell.databinding.FragmentChatRoomBinding
 import com.example.matchbell.feature.ChatMessageResponse
 import com.example.matchbell.feature.ChatMessageSendRequest
-import com.example.matchbell.feature.auth.TokenManager // [필수] TokenManager import
+import com.example.matchbell.feature.auth.TokenManager
 import com.example.matchbell.network.ChatApi
+import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
 import de.hdodenhof.circleimageview.CircleImageView
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
+import ua.naiksoftware.stomp.Stomp
+import ua.naiksoftware.stomp.StompClient
+import ua.naiksoftware.stomp.dto.LifecycleEvent
 import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject
@@ -55,6 +62,11 @@ class ChatRoomFragment : Fragment() {
 
     // [추가] 이미지 로딩을 위한 기본 URL
     private val BASE_URL = "http://3.239.45.21:8080"
+
+    // [추가] STOMP 관련 변수
+    private lateinit var mStompClient: StompClient
+    private val compositeDisposable = CompositeDisposable() // 구독 해제를 위한 쓰레기통
+    private val gson = Gson() // JSON 변환기
 
     // 메시지 데이터 구조 정의 (로컬/Adapter용) - API 응답 및 로직에 맞춤
     data class Message(
@@ -226,55 +238,6 @@ class ChatRoomFragment : Fragment() {
         )
     }
 
-    // [유지] STOMP 연결 및 구독 로직 PlaceHolder
-    private fun setupStompConnection(roomId: String?) {
-        if (roomId == null) return
-
-        // 1. 토큰 가져오기 (TokenManager 사용)
-        val token = context?.let { TokenManager.getAccessToken(it) } ?: "dummy_jwt"
-
-        // 2. WebSocket
-        val wsUrl = "ws://3.239.45.21:8080/ws/chat?token=$token"
-
-        // 3. 구독 Destination: /topic/chat.{matchId}
-        val subscribeTopic = "/topic/chat.$roomId"
-
-        Log.d("ChatRoomFragment", "WS URL: $wsUrl")
-        Log.d("ChatRoomFragment", "Subscribe To: $subscribeTopic")
-
-        // [실제 STOMP 라이브러리 초기화 및 연결 로직 필요]
-        Toast.makeText(requireContext(), "WebSocket 연결 및 $subscribeTopic 구독 시도 중...", Toast.LENGTH_SHORT).show()
-    }
-
-    // [유지] 메시지 전송 로직
-    private fun sendMessage() {
-        val content = etMessageInput.text.toString().trim()
-        val matchIdLong = roomId?.toLongOrNull()
-        if (content.isEmpty() || matchIdLong == null) return
-
-        // 1. 내가 보낸 메시지를 UI에 즉시 추가 (임시 ID 사용)
-        // [수정: Message 클래스에 직접 접근]
-        val myMessage = Message(
-            messageId = System.currentTimeMillis() / 100, // 임시 ID
-            matchId = matchIdLong,
-            senderId = myUserId,
-            content = content,
-            timestamp = System.currentTimeMillis(),
-            isMine = true
-        )
-        messageAdapter.addMessage(myMessage)
-        etMessageInput.text.clear()
-        rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
-
-        /// 2. [추가] 실제 WebSocket 전송 로직
-        val sendRequest = ChatMessageSendRequest( // 클래스를 찾을 수 없던 오류 해결
-            matchId = matchIdLong,
-            content = content
-        )
-        // [STOMP 전송 로직: Gson().toJson(sendRequest)]
-        Log.d("ChatRoomFragment", "STOMP Send: /app/chat.send, Body: $sendRequest")
-    }
-
     // [유지] 차단 다이얼로그 표시 및 API 호출 로직
     private fun showReportDialog() {
         val builder = AlertDialog.Builder(requireContext())
@@ -354,10 +317,130 @@ class ChatRoomFragment : Fragment() {
         }
     }
 
+    // ------------------------------------------------------------------------
+    // [수정] 4. 실제 STOMP 연결 및 구독 로직
+    // ------------------------------------------------------------------------
+    private fun setupStompConnection(roomId: String?) {
+        if (roomId == null) return
+
+        // 1. 토큰 가져오기
+        val token = context?.let { TokenManager.getAccessToken(it) } ?: ""
+
+        // 2. 서버 주소 설정 (ws:// 프로토콜 사용)
+        // 주의: 백엔드 설정에 따라 ?token= 쿼리 파라미터가 필요할 수도, 헤더가 필요할 수도 있습니다.
+        // 여기서는 작성해주신대로 URL 쿼리 파라미터 방식을 사용합니다.
+        val wsUrl = "ws://3.239.45.21:8080/ws/chat?token=$token"
+
+        // 3. 클라이언트 초기화
+        mStompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, wsUrl)
+
+        // [옵션] 연결 헤더에 토큰을 추가해야 하는 경우 (백엔드 요구사항에 따라 다름)
+        // val headerList = arrayListOf<StompHeader>()
+        // headerList.add(StompHeader("Authorization", "Bearer $token"))
+        // mStompClient.connect(headerList)
+
+        // 4. 연결 상태 모니터링 (로그 확인용)
+        val lifecycleDisp = mStompClient.lifecycle()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { lifecycleEvent ->
+                when (lifecycleEvent.type) {
+                    LifecycleEvent.Type.OPENED -> Log.d("STOMP", "연결 성공 (OPENED)")
+                    LifecycleEvent.Type.ERROR -> Log.e("STOMP", "연결 에러", lifecycleEvent.exception)
+                    LifecycleEvent.Type.CLOSED -> Log.d("STOMP", "연결 종료 (CLOSED)")
+                    else -> Log.d("STOMP", "연결 상태: ${lifecycleEvent.message}")
+                }
+            }
+        compositeDisposable.add(lifecycleDisp)
+
+        // 5. 채팅방 구독 (Receive) -> /topic/chat.{matchId}
+        val subscribeTopic = "/topic/chat.$roomId"
+        val topicDisp = mStompClient.topic(subscribeTopic)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ topicMessage ->
+                // 메시지 수신 시 실행되는 부분
+                Log.d("STOMP", "메시지 수신: ${topicMessage.payload}")
+
+                try {
+                    // JSON String -> ChatMessageResponse 객체로 변환
+                    val receivedMsg = gson.fromJson(topicMessage.payload, ChatMessageResponse::class.java)
+
+                    // 로컬 모델로 변환
+                    val messageItem = convertToLocalMessage(receivedMsg)
+
+                    // UI 업데이트 (내가 보낸 게 아닐 때만 추가하거나, 중복 방지 로직 필요)
+                    // 여기서는 일단 들어오는 족족 리스트에 추가합니다.
+                    // (내가 보낸 메시지는 sendMessage에서 이미 추가했으므로, senderId 비교 필요)
+                    if (messageItem.senderId != myUserId) {
+                        messageAdapter.addMessage(messageItem)
+                        rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
+                    }
+                } catch (e: Exception) {
+                    Log.e("STOMP", "메시지 파싱 실패", e)
+                }
+            }, { throwable ->
+                Log.e("STOMP", "구독 에러", throwable)
+            })
+        compositeDisposable.add(topicDisp)
+
+        // 6. 연결 시작
+        mStompClient.connect()
+    }
+
+    // ------------------------------------------------------------------------
+    // [수정] D. 메시지 전송 로직
+    // ------------------------------------------------------------------------
+    private fun sendMessage() {
+        val content = etMessageInput.text.toString().trim()
+        val matchIdLong = roomId?.toLongOrNull()
+        if (content.isEmpty() || matchIdLong == null) return
+
+        // 1. 내 화면에 먼저 보여주기 (UX 향상)
+        val myMessage = Message(
+            messageId = System.currentTimeMillis(), // 임시 ID
+            matchId = matchIdLong,
+            senderId = myUserId,
+            content = content,
+            timestamp = System.currentTimeMillis(),
+            isMine = true
+        )
+        messageAdapter.addMessage(myMessage)
+        etMessageInput.text.clear()
+        rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
+
+        // 2. 서버로 전송 (Send) -> /app/chat.send
+        val sendRequest = ChatMessageSendRequest(
+            matchId = matchIdLong,
+            content = content
+        )
+        // 객체 -> JSON String 변환
+        val jsonContent = gson.toJson(sendRequest)
+
+        // 전송 (비동기)
+        val sendDisp = mStompClient.send("/app/chat.send", jsonContent)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                Log.d("STOMP", "메시지 전송 성공")
+            }, { error ->
+                Log.e("STOMP", "메시지 전송 실패", error)
+                Toast.makeText(context, "메시지 전송 실패", Toast.LENGTH_SHORT).show()
+            })
+        compositeDisposable.add(sendDisp)
+    }
+
+    // ------------------------------------------------------------------------
+    // [수정] 연결 해제 (메모리 누수 방지)
+    // ------------------------------------------------------------------------
     override fun onDestroyView() {
         super.onDestroyView()
-        // [추가] STOMP 연결 해제 로직 필요
-        // disconnectStompClient()
+        // STOMP 연결 끊기
+        if (::mStompClient.isInitialized && mStompClient.isConnected) {
+            mStompClient.disconnect()
+        }
+        // RxJava 구독 해제
+        compositeDisposable.clear()
         _binding = null
     }
 }

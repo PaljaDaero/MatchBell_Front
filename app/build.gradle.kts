@@ -105,4 +105,10 @@ dependencies {
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // [추가] STOMP Protocol & WebSocket
+    implementation("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
+// [추가] RxJava (Stomp 라이브러리가 RxJava를 기반으로 작동합니다)
+    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
+    implementation("io.reactivex.rxjava2:rxandroid:2.1.1")
 }
