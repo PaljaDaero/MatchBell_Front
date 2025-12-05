@@ -14,6 +14,7 @@ import com.example.matchbell.data.model.SignupRequest
 import com.example.matchbell.data.model.UserProfileResponse
 import com.example.matchbell.data.model.VerifyCodeRequest
 import com.example.matchbell.data.model.VerifyResponse
+import com.example.matchbell.feature.CookieSpendRequest
 import com.example.matchbell.feature.CuriousUserSummary
 import com.example.matchbell.feature.MatchProfileResponse
 import com.example.matchbell.feature.MatchSummary
@@ -52,20 +53,17 @@ interface AuthApi {
     // 2. 프로필 / 내 정보 (Profile)
     // ==========================================
 
-    // 내 프로필 조회 (토큰 필요)
     @GET("/me/profile")
     suspend fun getMyProfile(
         @Header("Authorization") token: String
     ): Response<UserProfileResponse>
 
-    // 내 프로필 정보 수정 (텍스트)
     @PATCH("/me/profile")
     suspend fun updateProfile(
         @Header("Authorization") token: String,
         @Body request: ProfileUpdateRequest
     ): Response<UserProfileResponse>
 
-    // 프로필 사진 업로드 (이미지)
     @Multipart
     @POST("/me/profile/image")
     suspend fun uploadProfileImage(
@@ -73,11 +71,9 @@ interface AuthApi {
         @Part file: MultipartBody.Part
     ): Response<UserProfileResponse>
 
-    // 회원 탈퇴 (토큰 필요할 수 있음 -> 필요시 @Header 추가)
     @DELETE("/auth/withdraw")
     suspend fun withdrawAccount(): Response<Unit>
 
-    // 비밀번호 변경
     @POST("/auth/password/change")
     suspend fun changePassword(@Body request: ChangePasswordRequest): Response<Unit>
 
@@ -106,88 +102,77 @@ interface AuthApi {
     // 4. 기타 기능 (쿠키, 위치, 레이더)
     // ==========================================
 
-
-    // [수정됨] 쿠키 잔액 조회 (토큰 필요!)
-    @GET("/me/cookie") // /api 붙었는지 확인!
+    @GET("/me/cookie")
     suspend fun getCookieBalance(
-        @Header("Authorization") token: String // 👈 이게 꼭 있어야 합니다!
+        @Header("Authorization") token: String
     ): Response<CookieBalanceResponse>
 
-    // [수정됨] 쿠키 충전 (토큰 필요!)
-    @POST("/me/cookie/earn") // /api 붙었는지 확인!
+    @POST("/me/cookie/earn")
     suspend fun chargeCookie(
-        @Header("Authorization") token: String, // 👈 이것도 토큰 필요!
+        @Header("Authorization") token: String,
         @Body request: CookieChargeRequest
     ): Response<CookieBalanceResponse>
-    // [수정됨] 현위치 업데이트 (토큰 헤더 추가)
+
     @POST("/me/location")
     suspend fun updateMyLocation(
-        @Header("Authorization") token: String, // 👈 토큰 추가됨
+        @Header("Authorization") token: String,
         @Body request: LocationRequest
     ): Response<Unit>
 
-    // [수정됨] 레이더 유저 조회 (토큰 헤더 추가)
     @GET("/radar")
     suspend fun getRadarUsers(
-        @Header("Authorization") token: String // 👈 토큰 추가됨
+        @Header("Authorization") token: String
     ): Response<RadarResponse>
 
-    // [추가] 사용자가 보낸 궁금해요 리스트
     @GET("/me/curious/sent")
     suspend fun getSentCurious(
         @Header("Authorization") token: String
     ): Response<List<CuriousUserSummary>>
 
-    // [추가] 사용자가 받은 궁금해요 리스트
     @GET("/me/curious/received")
     suspend fun getReceivedCurious(
         @Header("Authorization") token: String
     ): Response<List<CuriousUserSummary>>
 
-    // [추가] 매칭 리스트 (매칭 완료)
     @GET("/me/matches")
     suspend fun getMatches(
         @Header("Authorization") token: String
     ): Response<List<MatchSummary>>
 
-    // [추가] 궁금해요(Like) 보내기
-    // 경로 예시: /me/curious/{targetUserId} (백엔드 명세에 따라 수정 필요)
     @POST("/me/curious/{targetUserId}")
     suspend fun sendLike(
         @Header("Authorization") token: String,
         @Path("targetUserId") targetUserId: Long
     ): Response<Unit>
 
-    // [수정] 상대방 상세 프로필 조회 (엔드포인트 변경됨)
-    // 경로 예시: /profiles/{targetUserId}
+    // [수정] 상대방 상세 프로필 조회 (MatchProfileResponse 모델 변경됨)
     @GET("/profiles/{targetUserId}")
     suspend fun getMatchProfile(
         @Header("Authorization") token: String,
         @Path("targetUserId") targetUserId: Long
     ): Response<MatchProfileResponse>
 
-    // [수정] 프로필 잠금 해제 (쿠키 차감 포함)
-    // 기존 spendCookie 대신 이걸 사용하게 됩니다.
+    // [수정] 프로필 잠금 해제 (Body 추가 -> 쿠키 차감 필수!)
     @POST("/me/matches/{targetUserId}/profile/unlock")
     suspend fun unlockProfile(
         @Header("Authorization") token: String,
-        @Path("targetUserId") targetUserId: Long
+        @Path("targetUserId") targetUserId: Long,
+        @Body request: CookieSpendRequest
     ): Response<ProfileUnlockResponse>
 
     // ==========================================
-    // 6. [추가] 나만의 궁합 & 랭킹
+    // 6. 나만의 궁합 & 랭킹
     // ==========================================
 
-    // 나만의 궁합 보기 (결과 반환)
     @POST("/my-compat")
     suspend fun postMyCompat(
         @Header("Authorization") token: String,
         @Body request: MyCompatRequest
     ): Response<MyCompatResponse>
 
-    // 궁합 랭킹 조회 (Header 없음)
     @GET("/compat/ranking")
     suspend fun getRanking(
+        @Header("Authorization") token: String,
         @Query("limit") limit: Int = 100
     ): Response<RankingListResponse>
 }

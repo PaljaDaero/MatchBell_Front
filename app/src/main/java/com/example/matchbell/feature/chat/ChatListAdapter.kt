@@ -13,34 +13,50 @@ import de.hdodenhof.circleimageview.CircleImageView
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
-// [수정] chatRooms를 var로 바꾸고, updateList 함수를 추가하여 목록 업데이트를 처리합니다.
 class ChatListAdapter(
-    private var chatRooms: List<ChatRoomData>, // private var로 변경하여 목록 업데이트 가능하게 함
+    private var chatRooms: List<ChatRoomData>,
     private val onItemClicked: (ChatRoomData) -> Unit
 ) : RecyclerView.Adapter<ChatListAdapter.ChatRoomViewHolder>() {
 
+    // [핵심 수정] UTC 파싱 + 날짜 포맷 로직
     private fun formatApiTime(apiTime: String): String {
-        return try {
-            val apiFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-            val date = apiFormat.parse(apiTime) ?: return apiTime // 파싱 실패 시 원본 반환
+        if (apiTime.isNullOrEmpty()) return ""
 
-            val now = Date()
-            val dayInMs = 1000 * 60 * 60 * 24
+        // 1. 서버 UTC 시간 파싱
+        val patterns = listOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss"
+        )
 
-            return if (now.time - date.time < dayInMs) {
-                // 오늘: "오전/오후 3:30" 형식
-                SimpleDateFormat("a h:mm", Locale.getDefault()).format(date)
-            } else {
-                // 오늘 이전: "11/29" 형식
-                SimpleDateFormat("MM/dd", Locale.getDefault()).format(date)
-            }
-        } catch (_: Exception) {
-            // 오류 시 원본 문자열 반환
-            apiTime
+        var parsedDate: Date? = null
+        for (pattern in patterns) {
+            try {
+                val parser = SimpleDateFormat(pattern, Locale.KOREA)
+                parser.timeZone = TimeZone.getTimeZone("UTC") // 서버 = UTC
+                parsedDate = parser.parse(apiTime)
+                if (parsedDate != null) break
+            } catch (e: Exception) { continue }
+        }
+
+        if (parsedDate == null) return apiTime
+
+        // 2. 오늘인지 확인 (로컬 시간 기준 비교)
+        val now = Date()
+        val dayFormat = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+        val isToday = dayFormat.format(parsedDate) == dayFormat.format(now)
+
+        return if (isToday) {
+            // 오늘: "오전 3:30"
+            SimpleDateFormat("a h:mm", Locale.getDefault()).format(parsedDate)
+        } else {
+            // 과거: "12월 5일" (년도 제외, 날짜만)
+            SimpleDateFormat("M월 d일", Locale.getDefault()).format(parsedDate)
         }
     }
-
 
     override fun getItemCount(): Int = chatRooms.size
 
@@ -54,7 +70,6 @@ class ChatListAdapter(
     }
 
     inner class ChatRoomViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        // [주의: XML 레이아웃 ID와 일치하는지 확인해야 합니다]
         private val profileImage: CircleImageView = itemView.findViewById(R.id.iv_profile_image)
         private val userName: TextView = itemView.findViewById(R.id.tv_user_name)
         private val lastMessage: TextView = itemView.findViewById(R.id.tv_last_message)
@@ -65,28 +80,14 @@ class ChatListAdapter(
         fun bind(chatRoom: ChatRoomData) {
             val context = itemView.context
 
-            // 1. [수정] 프로필 이미지 로드 (URL 처리 - Glide 사용)
-            if (!chatRoom.userProfileUrl.isNullOrEmpty()) {
-                Glide.with(context)
-                    .load(chatRoom.userProfileUrl)
-                    .placeholder(R.drawable.bg_profile_image) // 로딩 중 기본 이미지 (R.drawable.bg_profile_image가 있어야 함)
-                    .error(R.drawable.bg_profile_image) // 로드 실패 시 이미지
-                    .into(profileImage)
-            } else {
-                // URL이 없는 경우 로컬 더미 이미지 사용
-                profileImage.setImageResource(R.drawable.bg_profile_image)
-            }
+            // 프로필 사진 -> 자물쇠 고정
+            Glide.with(context).clear(profileImage)
+            profileImage.setImageResource(R.drawable.ic_lock)
 
-            // 2. 닉네임
             userName.text = chatRoom.userName
-
-            // 3. 마지막 메시지
             lastMessage.text = chatRoom.lastMessage
-
-            // 4. [수정] 마지막 메시지 시간 포맷
             timestamp.text = formatApiTime(chatRoom.timestamp)
 
-            // 5. 읽지 않은 메시지 수
             if (chatRoom.unreadCount > 0) {
                 unreadCount.text = chatRoom.unreadCount.toString()
                 unreadContainer.visibility = View.VISIBLE
@@ -94,10 +95,7 @@ class ChatListAdapter(
                 unreadContainer.visibility = View.GONE
             }
 
-            // 6. 클릭 리스너
-            itemView.setOnClickListener {
-                onItemClicked(chatRoom)
-            }
+            itemView.setOnClickListener { onItemClicked(chatRoom) }
         }
     }
 }

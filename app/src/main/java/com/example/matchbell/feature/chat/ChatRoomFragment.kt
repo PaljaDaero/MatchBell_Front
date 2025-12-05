@@ -17,7 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.example.matchbell.R
 import com.example.matchbell.databinding.FragmentChatRoomBinding
 import com.example.matchbell.feature.ChatMessageResponse
@@ -37,7 +36,7 @@ import org.json.JSONObject
 import ua.naiksoftware.stomp.Stomp
 import ua.naiksoftware.stomp.StompClient
 import ua.naiksoftware.stomp.dto.LifecycleEvent
-import ua.naiksoftware.stomp.dto.StompHeader // [필수 Import] 헤더 클래스
+import ua.naiksoftware.stomp.dto.StompHeader
 import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject
@@ -120,13 +119,11 @@ class ChatRoomFragment : Fragment() {
         val btnMore: ImageButton = binding.btnMore
 
         tvUserName.text = otherUserName ?: "알 수 없는 사용자"
-        if (!otherProfileUrl.isNullOrEmpty()) {
-            val fullUrl = if (otherProfileUrl!!.startsWith("http")) otherProfileUrl else "$BASE_URL$otherProfileUrl"
-            Glide.with(this).load(fullUrl).placeholder(R.drawable.bg_profile_image).into(ivProfile)
-        } else {
-            ivProfile.setImageResource(R.drawable.bg_profile_image)
-        }
 
+        // [수정] 상단 프로필 이미지도 자물쇠 아이콘(ic_lock)으로 고정
+        ivProfile.setImageResource(R.drawable.ic_lock)
+
+        // Adapter 초기화 (빈 리스트로 생성)
         messageAdapter = MessageAdapter(mutableListOf())
         rvChatMessages.apply {
             layoutManager = LinearLayoutManager(context).apply { stackFromEnd = true }
@@ -154,6 +151,8 @@ class ChatRoomFragment : Fragment() {
         btnSend.setOnClickListener { sendMessage() }
     }
 
+    // ... (이하 나머지 함수들은 기존과 동일하게 유지) ...
+
     private fun loadMatchScore() {
         val targetId = otherUserId.toLongOrNull()
         if (targetId == null || targetId == -1L) return
@@ -166,7 +165,9 @@ class ChatRoomFragment : Fragment() {
                 if (response.isSuccessful) {
                     val profile = response.body()
 
-                    val compat = profile?.basic?.compat
+                    // [수정] basic을 제거하고 바로 compat에 접근합니다.
+                    // 기존: val compat = profile?.basic?.compat
+                    val compat = profile?.compat
 
                     val finalS = compat?.finalScore ?: 0.0
                     val stressS = compat?.stressScore ?: 0.0
@@ -188,20 +189,13 @@ class ChatRoomFragment : Fragment() {
         }
     }
 
-    // ------------------------------------------------------------------------
-    // [수정] STOMP 연결 설정 (Header 방식 적용)
-    // ------------------------------------------------------------------------
     private fun setupStompConnection(roomId: String?) {
         if (roomId == null) return
         val token = context?.let { TokenManager.getAccessToken(it) } ?: ""
-
-        // [수정 1] URL에서 토큰 제거 (?token= 부분 삭제)
-        // ws://3.239.45.21:8080/ws/websocket
         val wsUrl = "ws://3.239.45.21:8080/ws/websocket"
 
         mStompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, wsUrl)
 
-        // [수정 2] 헤더 생성 (Authorization: Bearer <Token>)
         val headerList = arrayListOf<StompHeader>()
         headerList.add(StompHeader("Authorization", "Bearer $token"))
 
@@ -234,7 +228,6 @@ class ChatRoomFragment : Fragment() {
             }, { })
         compositeDisposable.add(topicDisp)
 
-        // [수정 3] connect() 호출 시 헤더 리스트 전달
         mStompClient.connect(headerList)
     }
 
@@ -301,8 +294,11 @@ class ChatRoomFragment : Fragment() {
                 val response = chatApi.getChatHistory("Bearer $token", matchIdLong)
                 if (response.isSuccessful) {
                     val messages = response.body()?.map { convertToLocalMessage(it) } ?: emptyList()
-                    messageAdapter.addMessages(messages)
-                    if (messages.isNotEmpty()) rvChatMessages.scrollToPosition(messages.size - 1)
+                    // [변경] 날짜 바 처리를 위해 setMessages 사용
+                    messageAdapter.setMessages(messages)
+                    if (messageAdapter.itemCount > 0) {
+                        rvChatMessages.scrollToPosition(messageAdapter.itemCount - 1)
+                    }
                 }
             } catch (e: Exception) {}
         }
@@ -312,11 +308,24 @@ class ChatRoomFragment : Fragment() {
         return Message(response.id, response.matchId, response.senderId.toString(), response.content, convertApiDateToTimestamp(response.sentAt), response.senderId.toString() == myUserId)
     }
 
-    private fun convertApiDateToTimestamp(apiDate: String): Long {
-        return try {
-            val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-            format.parse(apiDate)?.time ?: System.currentTimeMillis()
-        } catch (e: Exception) { System.currentTimeMillis() }
+    // [유지] UTC 파싱 로직
+    private fun convertApiDateToTimestamp(apiDate: String?): Long {
+        if (apiDate.isNullOrEmpty()) return System.currentTimeMillis()
+        val patterns = listOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss"
+        )
+        for (pattern in patterns) {
+            try {
+                val format = SimpleDateFormat(pattern, Locale.KOREA)
+                format.timeZone = java.util.TimeZone.getTimeZone("UTC")
+                val date = format.parse(apiDate)
+                if (date != null) return date.time
+            } catch (e: Exception) { continue }
+        }
+        return System.currentTimeMillis()
     }
 
     private fun showReportDialog() {
